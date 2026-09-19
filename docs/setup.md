@@ -104,18 +104,34 @@ If the inbox is empty on a Thursday, it falls back to an outside case note from 
 
 ## 8. Turn the schedule on
 
-The cron is already in the workflow. Two things to know about GitHub's scheduler:
+The crons are already in the workflow. Nothing to switch on, but four things are worth knowing.
 
-- Scheduled workflows only run from the default branch, so the workflow file has to be on `main`.
-- GitHub disables scheduled workflows in public repos after 60 days with no repository activity. Since this commits daily, that will not trigger, but if you pause it for two months you will have to re-enable it in the Actions tab.
+**It lands at a different time every day.** The workflow is scheduled in six windows, at 01:17, 04:17, 07:17, 10:17, 13:17 and 16:17 UTC. A gate step works out which one belongs to today by hashing the date, and the other five exit in seconds. The chosen window then waits a further random-looking interval of up to 45 minutes, drawn from the same hash. See it for yourself:
 
-Runs can be a few minutes late when GitHub's queues are busy. That is normal.
+```bash
+python scripts/should_run_now.py --preview 14
+```
+
+It is deterministic rather than actually random, on purpose. Real randomness per run would sometimes fire two windows on the same day and sometimes none. This way exactly one runs, and the time still moves around by fifteen hours across the week.
+
+**Scheduled workflows only run from the default branch**, so the workflow file has to be on `main`.
+
+**GitHub disables scheduled workflows in public repos after 60 days with no repository activity.** Committing daily prevents it, but if you pause for two months you will have to re-enable it in the Actions tab.
+
+**Runs can be late** when GitHub's queues are busy. With the random wait on top, the commit time is a range, not a promise.
+
+## 9. The weekly review reaches your inbox
+
+A second workflow, `weekly-review-issue.yml`, opens an issue every Sunday at 21:00 IST listing the week's output with a checklist of what to inspect. GitHub emails you about issues on your own repositories, so that is how the review lands in your inbox without this repo holding any email credential. Closing the issue is the signal that you reviewed the week.
+
+There is also a one-off audit set up on the Claude side for 26 September, which reads the repo, checks it against its own standards, and emails you a verdict on whether the first week was worth it. That one is blunt by design.
 
 ## Changing things later
 
 | What you want | Where to change it |
 | --- | --- |
-| The time it runs | the `cron` line in `.github/workflows/daily-build.yml`. It is in UTC, so subtract 5:30 from the IST time you want |
+| The times it can run | the `WINDOWS` list in `scripts/should_run_now.py`, in UTC hours, plus the matching `cron` lines in the workflow |
+| How far the time wanders | `MAX_EXTRA_SLEEP` in `scripts/should_run_now.py` |
 | Which track runs on which day | the `TRACKS` dictionary in `scripts/pick_track.py` |
 | The quality bar | `STANDARDS.md`. This is the file that matters |
 | How a day is run | `.claude/skills/daily-build/SKILL.md` |

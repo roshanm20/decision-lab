@@ -16,7 +16,9 @@ The reason it is public is simple. Anyone can say they think about business prob
 | [`bi/analyses`](bi/analyses) | Analyses on real or clearly labelled synthetic data, with the query or script committed |
 | [`bi/metric-library`](bi/metric-library) | One metric per file. Formula, edge cases, how it gets gamed |
 | [`content/teardowns`](content/teardowns) | AI products taken apart: the wedge, the pricing, the moat, the thing that breaks |
+| [`content/scans`](content/scans) | Weekly scans of what shipped, and the one thing worth building on |
 | [`content/sector-notes`](content/sector-notes) | How a sector works, who earns what along the chain |
+| [`discovery`](discovery) | What the daily search turned up, including what got rejected |
 | [`content/cases`](content/cases) | Outside case notes. A decision, the options with numbers, my call |
 | [`tools`](tools) | Small things that run: calculators, generators, checkers |
 | [`weekly`](weekly) | What I got wrong that week and what I changed |
@@ -26,17 +28,21 @@ The reason it is public is simple. Anyone can say they think about business prob
 
 One piece a day, on a fixed rotation, so the week has a shape.
 
-| Day | Track |
-| --- | --- |
-| Monday | Business intelligence analysis |
-| Tuesday | AI product teardown |
-| Wednesday | Metric definition |
-| Thursday | A decision from my own work |
-| Friday | Sector note |
-| Saturday | A small tool |
-| Sunday | Weekly review |
+| Day | Track | Starts from |
+| --- | --- | --- |
+| Monday | Business intelligence build | a search for a measurement problem people are complaining about |
+| Tuesday | AI product teardown | a search for something that shipped or repriced in the last fortnight |
+| Wednesday | Metric definition | the metric list |
+| Thursday | A decision from my own work | my own notes |
+| Friday | Innovation scan | a search for what actually moved this week |
+| Saturday | Build day | a search for a problem a short script would solve |
+| Sunday | Weekly review | this repo |
 
-A GitHub Action runs Claude Code every morning against the rules in [`CLAUDE.md`](CLAUDE.md) and the quality bar in [`STANDARDS.md`](STANDARDS.md). It picks the next topic from [`BACKLOG.md`](BACKLOG.md), does the research, writes the piece, and commits it. I curate the backlog, review every week, and rewrite whatever does not hold up.
+Four of the seven days start with a live web search rather than a fixed topic. The run looks for something that actually moved, records what it found in [`discovery`](discovery) including the findings it rejected, and builds on one of them. A fixed backlog only gets used when the search turns up nothing worth building on, which is the honest outcome some weeks and is recorded as such.
+
+Saturday compounds instead of accumulating. Once there are a few tools, improving one beats starting another, and [`tools/CHANGELOG.md`](tools/CHANGELOG.md) is where that shows.
+
+A GitHub Action runs Claude Code against the rules in [`CLAUDE.md`](CLAUDE.md) and the quality bar in [`STANDARDS.md`](STANDARDS.md). It is scheduled in six windows a day and picks one deterministically from the date, so the commit lands at a different time each day and never twice. I curate the backlog, review every week, and rewrite whatever does not hold up.
 
 Thursday works differently, and it is the part I care most about. I drop rough notes about real decisions into [`journal/inbox`](journal/inbox), and the run turns the oldest one into a proper decision record using only what my note says. Where my note is thin, the record ends with a question about my own note rather than a guess. The automation knows nothing about my companies, and it is not allowed to fill that in from the web or from inference. Those open questions are the honest seam in this repo, and I would rather show it than hide it.
 

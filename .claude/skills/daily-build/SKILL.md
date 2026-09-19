@@ -1,16 +1,16 @@
 ---
 name: daily-build
-description: Produce and commit one day's piece for this repo, on the track the rotation picks. Use when the daily scheduled workflow runs, or when Roshan asks for today's piece by hand.
+description: Produce and commit one day's piece for this repo, on the track the rotation picks, starting from a live web search for what is actually new. Use when the daily scheduled workflow runs, or when Roshan asks for today's piece by hand.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
 ---
 
 # Daily build
 
-Produce exactly one piece and commit it. Follow these steps in order. Do not skip step 1 or step 2.
+Produce exactly one piece and commit it. Follow these steps in order.
 
 ## 1. Load the rules
 
-Read `STANDARDS.md` in full. Read `CLAUDE.md`. These are binding. The most important line in them is this one: every piece has to be defensible by Roshan in an interview, without notes. Write for that reader.
+Read `STANDARDS.md` in full. Read `CLAUDE.md`. The line that governs everything: every piece has to be defensible by Roshan in an interview, without notes. Write for that reader.
 
 ## 2. Get today's brief
 
@@ -18,30 +18,53 @@ Read `STANDARDS.md` in full. Read `CLAUDE.md`. These are binding. The most impor
 python scripts/pick_track.py
 ```
 
-Handle the exit code:
+Exit codes:
 
-- **0**: carry on with the brief it printed.
-- **3**: today's piece already exists. Stop now. Commit nothing. Say so and finish.
-- **4**: the backlog for this track is empty. Propose three topics that meet the standards, append them under that track's heading in `BACKLOG.md` each marked `(auto)` at the end, then use the first one.
+- **0**: carry on.
+- **3**: today's piece already exists. Stop. Commit nothing. Say so and finish.
+- **4**: a backlog-only track has an empty backlog. Propose three topics that meet the standards, append them under that heading marked `(auto)`, then use the first.
 
-## 3. Research
+## 3. Discovery, when the brief says `"discovery": true`
 
-This is where the piece is won or lost. Budget most of the run here.
+Most days start here, not with a topic. The brief's `search_for` field says where to look.
 
-- Search for primary sources. Company pricing pages, annual reports, regulatory filings, industry body data, official statistics. A news article citing a number is worse than the source it cites, so follow it back.
-- Get real figures. For each one note the source and the date you checked it.
-- Look for the number that decides the answer, not a collection of context numbers.
-- If after honest effort you cannot source the claims the piece needs, **stop and write nothing**. Say what you could not source. A missing day is acceptable. A day of unsourced assertions is not.
+Search properly. Several searches, not one. You are looking for something that moved recently and that a builder would care about, not for a topic to summarise. Good signals:
+
+- Someone describing a problem they have, in public, in the last two weeks.
+- A pricing page or changelog that changed.
+- A dataset or API that just became available.
+- A claim that looks wrong and can be checked.
+
+Bad signals: a funding round with no product detail, a vendor blog post about its own excellence, a paper with no buildable idea in it.
+
+Then append to the discovery log at the path the brief gives, creating the file with a `# Discovery log, <Month YYYY>` heading if it does not exist:
+
+```
+## 2026-09-21
+- <finding, one line> . <link> . BUILT
+- <finding, one line> . <link> . QUEUED, added to BACKLOG under metric
+- <finding, one line> . <link> . IGNORED, the claim did not survive a check
+```
+
+Log three to five findings every discovery day, including the ones you did not use. The rejected ones are part of the record.
+
+Pick one finding and build the day's piece on it. If the search genuinely turns up nothing worth building on, say so in the log, then fall back to `backlog_fallback_topic` from the brief. Falling back is allowed. Pretending a weak finding is interesting is not.
+
+## 4. Research the thing you picked
+
+- Primary sources. Pricing pages, filings, official statistics, the actual repository, the actual dataset. A news article citing a number is worse than the source it cites, so follow it back.
+- Every figure gets its source and the date you checked it.
+- If you cannot source what the piece needs, **stop and write nothing.** Say what you could not source. A missing day is acceptable. A day of unsourced assertions is not.
 
 Do not lift sentences from sources. Read, then write in your own words.
 
-## 4. Write the piece
+Never write about Roshan's own companies or projects from anything except a journal note. Not from the web, not from this repo's README, not from inference. If a piece would benefit from a CompEdge example, leave it out and say so in the commit message.
 
-Write to the directory the brief gave you, using the suggested filename.
+## 5. Build or write
 
-Start with the frontmatter block exactly as `STANDARDS.md` specifies: `title`, `date`, `track`, `summary`, `sources`.
+Write to the directory the brief gives, named `YYYY-MM-DD-slug.md`, with the frontmatter block from `STANDARDS.md`: `title`, `date`, `track`, `summary`, `sources`.
 
-Then the body. Structure depends on the track, but every piece ends with these two headings:
+Every piece ends with:
 
 ```
 ## What would change my mind
@@ -49,76 +72,51 @@ Then the body. Structure depends on the track, but every piece ends with these t
 ## Sources
 ```
 
-The sources list is numbered, each with a link and the date you checked it.
+Sources numbered, each with a link and the date checked.
 
-Style rules, and they are checked:
+Style, and this is checked:
 
-- Plain Indian English. Short sentences. The way a person writes, not the way a report is written.
+- Plain Indian English. Short sentences. The way a person writes.
 - **No em dashes anywhere.** Use a comma, a full stop, "and", or "but".
-- No filler openings. Start on the substance in the first sentence.
+- No filler opening. Start on the substance.
 - No consulting or AI vocabulary. Not "leverage", not "landscape", not "robust framework", not "in an era of".
-- Active voice. Say "I compared", not "a comparison was made".
-- Eight hundred to fifteen hundred words for a note. A metric definition can be two hundred to five hundred. Do not pad to hit a number.
+- Active voice.
+- Eight hundred to fifteen hundred words for a note, two hundred to five hundred for a metric. Do not pad.
 
-Then meet the track's extra requirement from the brief. If it says commit the SQL alongside, commit the SQL. If it says run the tool and paste the output, run it for real with Bash and paste the actual output.
+Then meet the brief's `extra_requirement`. If it says run the tool and paste the output, run it with Bash and paste what it actually printed.
 
-## 5. Self check before committing
+## Build day, Saturdays
 
-Go through this list honestly. If any answer is no, fix it or abandon the piece.
+The brief carries `existing_tools` and `prefer_extending`.
 
-- Is there a real decision or question at the centre, not a summary of a topic?
-- Does every number have a source next to it, or is it labelled as an estimate with the assumption stated?
-- Is there a clear position, or did I hedge both ways?
-- Is the "What would change my mind" section specific, or is it three generic lines?
-- Does the piece leave behind something reusable?
-- Are there any em dashes? Search the file and remove them.
-- Would Roshan be able to defend every sentence of this in an interview?
-- Does this repeat a piece that already exists? Check with `ls` on the track directory and `grep` the titles in `docs/INDEX.md`.
+When `prefer_extending` is true, improving an existing tool is the default and starting a new one needs a reason you state in the commit message. Forty one-off scripts are worth less than six tools that got better.
 
-## 6. Tick the backlog and rebuild the index
+To extend a tool: read it and its note, pick a limitation the note already admits to under "What it does not do", fix that, run the tool to prove it works, update the note's limitation list, and add a line to `tools/CHANGELOG.md`. The day's markdown file then describes what changed and why, and it can be short.
 
-Edit `BACKLOG.md` and change the topic's `- [ ]` to `- [x]`. If the track is down to three or fewer pending topics, append two or three more, marked `(auto)`.
+To write a new tool: under three hundred lines, runs on its own, no dependencies beyond pandas, numpy, matplotlib and the standard library unless you commit a requirements file. Standard library only is better. Add its first entry to `tools/CHANGELOG.md`.
 
-```bash
-python scripts/build_index.py
-```
-
-Fix any frontmatter problems it reports in today's file.
-
-## 7. Commit and push
-
-Git identity is already set by the workflow. Do not change it.
-
-```bash
-git add -A
-git commit -m "<track>: <short description of the piece>"
-git push
-```
-
-One commit. Do not split it up to make the history look busier.
+Either way you must actually run it. Never paste an output you did not see.
 
 ## Decision record track, Thursdays
 
-This is the most important track in the repo and the easiest one to ruin.
+The brief will have `"source": "journal"` and a `note_to_use` path. Read that note and build the record from it.
 
-The brief will have `"source": "journal"` and a `note_to_use` path. Read that note. Build the decision record from it.
+The rule that overrides everything here: **use only what the note says.** You know nothing about CompEdge, Nayrix, Dharti or any of Roshan's projects beyond what is in that file. Do not search for his companies. Do not reason your way to a plausible detail. Do not smooth over a gap.
 
-The rule that overrides everything else here: **use only what the note says.** You know nothing about CompEdge, Nayrix, Dharti, or any of Roshan's projects beyond what is in that file. Do not search the web for his companies and weave in what you find. Do not reason your way to a plausible detail. Do not smooth over a gap.
-
-Where the note is thin, put the question in the record itself:
+Where the note is thin, put the question in the record:
 
 ```
 ## Open questions on my own note
 
 - The note says pricing moved but not by how much. What were the two numbers?
-- No mention of what churn did in the three months after. Did it move?
+- Nothing on what churn did in the three months after. Did it move?
 ```
 
-That section is a feature. It shows the record was built from a real note rather than made up, and it gives Roshan a list of things to fill in.
+That section is a feature. It shows the record came from a real note, and it gives Roshan a list to fill in.
 
-Handle confidentiality. If the note has a line starting `CONFIDENTIAL:` or a "Cannot go public" section, nothing in there reaches the published record. Use a ratio, a range, or a description instead of the figure, and say in the record that the exact number is not public.
+Confidentiality: if the note has a line starting `CONFIDENTIAL:` or a "Cannot go public" section, nothing in there reaches the record. Use a ratio, a range or a description, and say the exact figure is not public.
 
-Structure for a decision record:
+Structure:
 
 ```
 ## The decision
@@ -130,21 +128,21 @@ Structure for a decision record:
 ## Open questions on my own note
 ```
 
-When the record is written, move the note:
+Then move the note:
 
 ```bash
 git mv journal/inbox/<note>.md journal/used/<note>.md
 ```
 
-If the brief instead says `"source": "backlog"`, the inbox was empty. Write an outside case note into `content/cases` from the backlog topic, and do not touch the journal folders.
+If the brief says `"source": "backlog"` instead, the inbox was empty. Write an outside case note into `content/cases` and do not touch the journal folders.
 
-## Weekly review track
+## Weekly review track, Sundays
 
-Sunday is different. Do not write opinions. Prepare a draft only:
+Do not write opinions. Prepare a draft only:
 
-1. List every piece committed in the last seven days with its track, title, and one line summary. Get the list with `git log --since="7 days ago" --name-only --pretty=format:` or by reading the file dates.
-2. Write a "Questions for me" section with three to five specific questions about the week's output. Not generic ones. Ask about the actual claims made, for example "the Blinkit note assumed a 12 percent contribution margin, does that hold at current AOV".
-3. Leave this exact block at the end, unfilled:
+1. List every piece committed in the last seven days with its track, title and one line summary. `git log --since="7 days ago" --name-only --pretty=format:` gives the files.
+2. Write a "Questions for me" section, three to five specific questions about the actual claims made that week. Not generic ones.
+3. Leave this block unfilled at the end:
 
 ```
 ## My read
@@ -152,4 +150,38 @@ Sunday is different. Do not write opinions. Prepare a draft only:
 _Not yet written._
 ```
 
-Roshan writes that part by hand. Never fill it, and never edit a weekly file where that section already has content.
+Roshan writes that by hand. Never fill it, and never edit a weekly file where that section already has content.
+
+## 6. Self check
+
+Every answer must be yes, or fix it, or abandon the piece.
+
+- A real decision or problem at the centre, not a topic summary?
+- Every number sourced, or labelled an estimate with the assumption stated?
+- A clear position, rather than hedging both ways?
+- Is "What would change my mind" specific?
+- Does the piece leave behind something reusable?
+- Any em dashes? Search the file and remove them.
+- Could Roshan defend every sentence in an interview?
+- Does this repeat an existing piece? Check the track directory and `grep` titles in `docs/INDEX.md`.
+- On a discovery day, is the discovery log updated, including the findings you rejected?
+
+## 7. Tick, rebuild, commit
+
+Tick the backlog item if you used one. Append two or three new topics marked `(auto)` if the track is down to three or fewer.
+
+```bash
+python scripts/build_index.py
+```
+
+Fix any frontmatter problems it reports in today's file.
+
+Git identity is set by the workflow. Do not change it.
+
+```bash
+git add -A
+git commit -m "<track>: <short description>"
+git push
+```
+
+One commit. Do not split it to make the history look busier.

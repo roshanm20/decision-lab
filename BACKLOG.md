@@ -1,10 +1,12 @@
 # Backlog
 
-The daily run picks the first unticked item under today's track. Tick an item with `[x]` when the piece is written.
+**This is the fallback, not the plan.** Monday, Tuesday, Friday and Saturday start with a web search for what actually moved that week, and build on what they find. The lists here are what the run falls back to on a day when the search turns up nothing worth building on, and they are where it files ideas it found but did not build.
 
-Thursday is different. It takes the oldest note from `journal/inbox` and writes a decision record from my own work. The `case` section below is only the fallback for a week where I have not left a note.
+So a healthy backlog grows on its own. Items appear marked `(auto)` when the Friday scan finds something worth queueing. Delete the weak ones, that is the curation.
 
-Add your own items freely. The automation appends a suggestion only when a track runs empty, and it marks its own with `(auto)` so the weak ones are easy to spot and delete.
+Wednesday and Thursday still work off fixed input. Wednesday takes the next metric from the list below. Thursday takes the oldest note from `journal/inbox` and writes a decision record about my own work, falling back to the `case` list only in a week where I left no note.
+
+Tick an item with `[x]` when it is written.
 
 ## What these topics are for
 
@@ -12,9 +14,9 @@ I am a physics graduate moving into product and management. The honest version o
 
 Where a topic is something I have lived, it goes in the journal instead, and Thursday picks it up.
 
-## bi-analysis
+## bi-build
 
-Real or clearly labelled synthetic data, a query or script, and a conclusion a manager could act on.
+Monday. Real or clearly labelled synthetic data, a query or script, and a conclusion a manager could act on. Discovery picks the problem where it can, so this list is the fallback.
 
 - [ ] Cohort retention on a public e-commerce transaction dataset, and what the curve shape says about the business
 - [ ] Funnel drop-off when events are logged unreliably, and how to still get a defensible number
@@ -78,9 +80,9 @@ One metric per file. Formula, edge cases, how it gets gamed, what to pair it wit
 - [ ] Responding to a competitor who has cut prices by forty percent
 - [ ] Whether to open source the core of a commercial product
 
-## sector-note
+## innovation-scan
 
-How a sector works. The players, where money is made along the chain, what is changing, and the one number that decides the outcome. Indian sectors mostly.
+Friday's track is a scan of what actually shipped that week, so this list is the fallback. When the week is quiet, the run writes one of these as a sector note into `content/sector-notes` instead: how a sector works, the players, where money is made along the chain, and the one number that decides the outcome. Indian sectors mostly.
 
 - [ ] Housing finance in India, where an NBFC actually earns against a bank, and what the spread has to cover
 - [ ] Indian quick commerce, where the margin comes from and whether it survives a funding slowdown
@@ -95,9 +97,9 @@ How a sector works. The players, where money is made along the chain, what is ch
 - [ ] Indian pharma CDMO, the shift in who holds pricing power
 - [ ] Electric two wheelers, the unit economics against the subsidy schedule
 
-## tool
+## build
 
-Small things that work. Under three hundred lines each.
+Saturday is build day, and once there are three or more tools in `tools/`, improving an existing one beats starting another. These are the new tools worth having. Fixing a limitation a tool already admits to in its "What it does not do" section counts for more than any of them.
 
 - [x] Cohort retention table generator from a transactions CSV
 - [ ] Unit economics calculator that takes assumptions from a YAML file and prints a sensitivity table

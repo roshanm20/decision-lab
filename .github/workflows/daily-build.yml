@@ -1,14 +1,21 @@
 name: Daily build
 
+# Scheduled in six windows a day. A gate step works out which one is today's,
+# deterministically from the date, so the commit lands at a different time each
+# day and never twice. See scripts/should_run_now.py.
 on:
   schedule:
-    # 01:30 UTC is 07:00 IST. GitHub runs scheduled workflows only from the
-    # default branch, and queues can delay a run by a few minutes.
-    - cron: "30 1 * * *"
+    - cron: "17 1 * * *"
+    - cron: "17 4 * * *"
+    - cron: "17 7 * * *"
+    - cron: "17 10 * * *"
+    - cron: "17 13 * * *"
+    - cron: "17 16 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write
   id-token: write
 
 concurrency:
@@ -18,7 +25,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Allows for the random wait of up to 45 minutes plus the build itself.
+    timeout-minutes: 90
 
     steps:
       - name: Check out the repo
@@ -31,7 +39,21 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Is this today's window
+        id: gate
+        env:
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          python scripts/should_run_now.py --schedule "$EVENT_SCHEDULE" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the chosen minute
+        if: steps.gate.outputs.run == 'true' && steps.gate.outputs.sleep_seconds != '0'
+        run: |
+          echo "Waiting ${{ steps.gate.outputs.sleep_seconds }}s, landing around ${{ steps.gate.outputs.window_ist }} IST."
+          sleep "${{ steps.gate.outputs.sleep_seconds }}"
+
       - name: Set the commit identity
+        if: steps.gate.outputs.run == 'true'
         # This is what makes the commits count on Roshan's contribution graph.
         # The email has to be one that is verified on his GitHub account.
         run: |
@@ -39,14 +61,15 @@ jobs:
           git config user.email "muhammedroshanmangat@gmail.com"
 
       - name: Run the daily build
+        if: steps.gate.outputs.run == 'true'
         uses: anthropics/claude-code-action@v1
         with:
-          # Generated locally with: claude setup-token
-          # Stored as a repository secret. Uses the Claude subscription, not API billing.
+          # Generated once with: claude setup-token
+          # Runs on the Claude subscription. No API key, no metered billing.
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: "/daily-build"
           claude_args: |
-            --max-turns 60
+            --max-turns 80
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch"
           # To pin a model, add a --model line above, for example:
           #   --model claude-opus-5
@@ -54,11 +77,21 @@ jobs:
           # run cannot fail on a model name that has been retired.
 
       - name: Report what landed
-        if: always()
+        if: always() && steps.gate.outputs.run == 'true'
         run: |
-          echo "### Last commit" >> "$GITHUB_STEP_SUMMARY"
-          git log -1 --pretty=format:'%h %an %s' >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Index check" >> "$GITHUB_STEP_SUMMARY"
-          python scripts/build_index.py --check >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          {
+            echo "### Window"
+            echo "Landed around ${{ steps.gate.outputs.window_ist }} IST."
+            echo ""
+            echo "### Last commit"
+            git log -1 --pretty=format:'%h %an %s'
+            echo ""
+            echo ""
+            echo "### Index check"
+            python scripts/build_index.py --check 2>&1 || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Note a skipped window
+        if: steps.gate.outputs.run != 'true'
+        run: |
+          echo "Not today's window. Today's run is at ${{ steps.gate.outputs.window_ist }} IST." >> "$GITHUB_STEP_SUMMARY"

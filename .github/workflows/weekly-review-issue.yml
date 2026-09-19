@@ -1,0 +1,68 @@
+name: Weekly review issue
+
+# Opens an issue every Sunday evening listing the week's output and what needs
+# reviewing. GitHub emails the repo owner about new issues, which is how this
+# reaches Roshan's inbox without the repo holding any email credential.
+on:
+  schedule:
+    - cron: "30 15 * * 0"   # 21:00 IST on Sunday
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  open-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build the issue body
+        id: body
+        run: |
+          {
+            echo "The week's output, for review. Anything that does not hold up should be rewritten or deleted."
+            echo ""
+            echo "## Committed this week"
+            echo ""
+            git log --since="7 days ago" --pretty=format:'- \`%ad\` %s' --date=short || true
+            echo ""
+            echo ""
+            echo "## Files added or changed"
+            echo ""
+            git log --since="7 days ago" --name-only --pretty=format: \
+              | grep -E '\.(md|py|sql)$' | sort -u | sed 's/^/- /' || true
+            echo ""
+            echo "## Discovery log"
+            echo ""
+            echo "Findings considered this month, including the rejected ones: \`discovery/$(date -u +%Y-%m).md\`"
+            echo ""
+            echo "## What to check"
+            echo ""
+            echo "- [ ] Open two pieces at random. Are the numbers sourced, is there a position, is there a what-would-change-my-mind section"
+            echo "- [ ] Is anything overclaiming on my behalf, about my experience or my companies"
+            echo "- [ ] Any decision record with open questions I can now answer from memory"
+            echo "- [ ] Did the build day extend an existing tool or start yet another one-off"
+            echo "- [ ] Write the \"My read\" section in this week's file under \`weekly/\`"
+            echo "- [ ] Drop at least one note in \`journal/inbox\` for next Thursday"
+            echo ""
+            echo "## If the quality is off"
+            echo ""
+            echo "The lever is \`STANDARDS.md\`, not the prompt. Tighten the bar, then test it with \`/daily-build\` locally before the next scheduled run."
+            echo ""
+            echo "Closing this issue is the signal that the week was reviewed."
+          } > issue_body.md
+          echo "path=issue_body.md" >> "$GITHUB_OUTPUT"
+
+      - name: Open the issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Weekly review, week ending $(date -u +%d\ %b\ %Y)" \
+            --body-file issue_body.md \
+            --assignee "$GITHUB_REPOSITORY_OWNER"

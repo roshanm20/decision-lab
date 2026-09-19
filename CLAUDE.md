@@ -12,12 +12,13 @@ Roshan is a physics graduate moving into product and management. The repo's job 
 
 ## How a day runs
 
-1. Run `python scripts/pick_track.py`. It prints today's track, target directory, and the next topic from `BACKLOG.md`. On Thursdays it points at the oldest note in `journal/inbox` instead, and the skill's decision record section governs that day.
-2. Do the work for that track. Research properly with web search. Real sources, real numbers.
-3. Write the file into the directory the script gave you, named `YYYY-MM-DD-slug.md`.
-4. Tick the backlog item off in `BACKLOG.md`.
-5. Run `python scripts/build_index.py` to refresh `docs/INDEX.md` and the index block in `README.md`.
-6. Commit and push.
+1. Run `python scripts/pick_track.py`. It prints today's track, the target directory, and where the day's subject comes from.
+2. On a day where the brief says `"discovery": true`, search the web first for something that actually moved, log three to five findings in `discovery/<month>.md` including the ones you reject, and build on one of them. The backlog is only the fallback when the search comes up empty. On Thursdays the subject is the oldest note in `journal/inbox` instead. The skill covers both.
+3. Do the work for that track. Research properly. Real sources, real numbers.
+4. Write the file into the directory the script gave you, named `YYYY-MM-DD-slug.md`.
+5. Tick the backlog item if you used one, and file any unbuilt findings into `BACKLOG.md` marked `(auto)`.
+6. Run `python scripts/build_index.py` to refresh `docs/INDEX.md` and the index block in `README.md`.
+7. Commit and push.
 
 ## Commit rules
 
@@ -34,6 +35,8 @@ One commit per day covering the new piece and the index refresh. Do not split in
 ## Hard limits
 
 - Never write more than one content piece in a run.
+- Never skip the discovery log on a discovery day. A day with no log entry looks like the search never happened, and that is the part of this repo that shows judgement rather than output.
+- On build day, once `tools/` holds three or more tools, improving one is the default. Starting another needs a reason stated in the commit message.
 - Never edit or rewrite a piece from a previous day, except to fix a factual error. If you fix one, say so in the commit message.
 - Never invent a source, a URL, a filing, or a figure.
 - Never state anything about Roshan's own companies or projects that is not written in a journal note. CompEdge, Nayrix, Dharti, the Mercor eval work. No web research about them, no inference, no plausible filler. A gap becomes an open question, not a guess.

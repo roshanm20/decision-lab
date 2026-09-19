@@ -22,6 +22,7 @@ README = ROOT / "README.md"
 
 SEARCH_DIRS = [
     "content/decisions",
+    "content/scans",
     "content/teardowns",
     "content/cases",
     "content/sector-notes",
@@ -32,18 +33,24 @@ SEARCH_DIRS = [
 ]
 
 TRACK_ORDER = [
+    ("bi-build", "Business intelligence builds"),
     ("bi-analysis", "Business intelligence analyses"),
     ("teardown", "AI product teardowns"),
     ("metric", "Metric library"),
     ("decision-record", "Decision records from my own work"),
     ("case", "Management case notes"),
+    ("innovation-scan", "Innovation scans"),
     ("sector-note", "Sector notes"),
-    ("tool", "Tools"),
+    ("build", "Tools"),
+    ("tool", "Tools, earlier naming"),
     ("weekly-review", "Weekly reviews"),
 ]
 
 SINGULAR = {
+    "bi-build": "business intelligence build",
     "bi-analysis": "business intelligence analysis",
+    "innovation-scan": "innovation scan",
+    "build": "tool",
     "teardown": "AI product teardown",
     "metric": "metric",
     "decision-record": "decision record",
@@ -89,7 +96,7 @@ def collect():
         if not d.exists():
             continue
         for path in sorted(d.rglob("*.md")):
-            if path.name.upper() == "README.MD":
+            if path.name.upper() in {"README.MD", "CHANGELOG.MD", "_TEMPLATE.MD"}:
                 continue
             fields, probs = parse_frontmatter(path)
             problems.extend(probs)
