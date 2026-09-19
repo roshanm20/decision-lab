@@ -7,6 +7,7 @@
 | Business intelligence analyses | 0 |
 | AI product teardowns | 0 |
 | Metric library | 0 |
+| Decision records from my own work | 0 |
 | Management case notes | 0 |
 | Sector notes | 0 |
 | Tools | 1 |

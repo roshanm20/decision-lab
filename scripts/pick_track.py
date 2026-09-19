@@ -57,16 +57,31 @@ TRACKS = {
         "extra": "Include the SQL for the metric against a plausible schema, with the schema stated.",
     },
     3: {
-        "id": "case",
-        "dir": "content/cases",
-        "label": "Management case note",
+        "id": "decision-record",
+        "dir": "content/decisions",
+        "label": "Decision record from Roshan's own work",
         "brief": (
-            "Write a case note on a decision. Situation, the decision on the "
-            "table, two or three options with numbers attached, your call, and "
-            "what would change your mind. Base it on a real company where you "
-            "can, and say clearly when the figures are illustrative."
+            "Turn the oldest note in journal/inbox into a proper decision "
+            "record. Use ONLY what the note says. Where the note is thin, ask a "
+            "question in the open questions section rather than filling the gap "
+            "yourself. This is about Roshan's own companies and projects, so an "
+            "invented detail here is worse than a missing one."
         ),
-        "extra": "The options section must have numbers, not adjectives.",
+        "extra": (
+            "Move the note to journal/used/ once the record is written, so it is "
+            "not used twice."
+        ),
+        "source": "journal",
+        "fallback_id": "case",
+        "fallback_dir": "content/cases",
+        "fallback_label": "Management case note",
+        "fallback_brief": (
+            "The inbox is empty, so write an outside case note instead. "
+            "Situation, the decision on the table, two or three options with "
+            "numbers attached, your call, and what would change your mind. Base "
+            "it on a real company, and say clearly when figures are illustrative."
+        ),
+        "fallback_extra": "The options section must have numbers, not adjectives.",
     },
     4: {
         "id": "sector-note",
@@ -113,6 +128,18 @@ def slugify(text: str) -> str:
     return "-".join(text.split("-")[:8])
 
 
+def inbox_notes():
+    """Notes waiting in journal/inbox, oldest first. Skips README and _ files."""
+    inbox = ROOT / "journal" / "inbox"
+    if not inbox.exists():
+        return []
+    notes = [
+        p for p in inbox.glob("*.md")
+        if not p.name.startswith("_") and p.name.upper() != "README.MD"
+    ]
+    return sorted(notes, key=lambda p: (p.stat().st_mtime, p.name))
+
+
 def read_backlog_section(track_id: str):
     """Return (all_items, pending_items) for one track heading."""
     if not BACKLOG.exists():
@@ -146,7 +173,20 @@ def main() -> int:
     else:
         today = dt.date.today()
 
-    track = TRACKS[today.weekday()]
+    track = dict(TRACKS[today.weekday()])
+    waiting = inbox_notes() if track.get("source") == "journal" else []
+
+    if track.get("source") == "journal" and not waiting:
+        # Nothing from Roshan this week, so fall back to an outside case.
+        track.update(
+            id=track["fallback_id"],
+            dir=track["fallback_dir"],
+            label=track["fallback_label"],
+            brief=track["fallback_brief"],
+            extra=track["fallback_extra"],
+            source=None,
+        )
+
     target_dir = ROOT / track["dir"]
     target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -157,7 +197,14 @@ def main() -> int:
     all_items, pending = read_backlog_section(track["id"])
     topic = pending[0] if pending else None
 
-    if not needs_topic:
+    if track.get("source") == "journal":
+        note = waiting[0]
+        needs_topic = False
+        topic = f"the note at {note.relative_to(ROOT).as_posix()}"
+
+    if track.get("source") == "journal":
+        suggested_name = f"{stamp}-{slugify(waiting[0].stem)}.md"
+    elif not needs_topic:
         suggested_name = f"{stamp}-week-review.md"
     elif topic:
         suggested_name = f"{stamp}-{slugify(topic)}.md"
@@ -174,6 +221,9 @@ def main() -> int:
         "extra_requirement": track["extra"],
         "topic": topic,
         "suggested_filename": suggested_name,
+        "source": track.get("source") or "backlog",
+        "note_to_use": waiting[0].relative_to(ROOT).as_posix() if waiting else None,
+        "notes_waiting_in_inbox": len(waiting),
         "backlog_pending_in_track": len(pending),
         "backlog_total_in_track": len(all_items),
         "already_done_today": existing_today,

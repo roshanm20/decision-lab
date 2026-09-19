@@ -21,6 +21,7 @@ INDEX = ROOT / "docs" / "INDEX.md"
 README = ROOT / "README.md"
 
 SEARCH_DIRS = [
+    "content/decisions",
     "content/teardowns",
     "content/cases",
     "content/sector-notes",
@@ -34,6 +35,7 @@ TRACK_ORDER = [
     ("bi-analysis", "Business intelligence analyses"),
     ("teardown", "AI product teardowns"),
     ("metric", "Metric library"),
+    ("decision-record", "Decision records from my own work"),
     ("case", "Management case notes"),
     ("sector-note", "Sector notes"),
     ("tool", "Tools"),
@@ -44,6 +46,7 @@ SINGULAR = {
     "bi-analysis": "business intelligence analysis",
     "teardown": "AI product teardown",
     "metric": "metric",
+    "decision-record": "decision record",
     "case": "management case note",
     "sector-note": "sector note",
     "tool": "tool",

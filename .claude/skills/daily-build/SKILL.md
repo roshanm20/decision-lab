@@ -97,6 +97,47 @@ git push
 
 One commit. Do not split it up to make the history look busier.
 
+## Decision record track, Thursdays
+
+This is the most important track in the repo and the easiest one to ruin.
+
+The brief will have `"source": "journal"` and a `note_to_use` path. Read that note. Build the decision record from it.
+
+The rule that overrides everything else here: **use only what the note says.** You know nothing about CompEdge, Nayrix, Dharti, or any of Roshan's projects beyond what is in that file. Do not search the web for his companies and weave in what you find. Do not reason your way to a plausible detail. Do not smooth over a gap.
+
+Where the note is thin, put the question in the record itself:
+
+```
+## Open questions on my own note
+
+- The note says pricing moved but not by how much. What were the two numbers?
+- No mention of what churn did in the three months after. Did it move?
+```
+
+That section is a feature. It shows the record was built from a real note rather than made up, and it gives Roshan a list of things to fill in.
+
+Handle confidentiality. If the note has a line starting `CONFIDENTIAL:` or a "Cannot go public" section, nothing in there reaches the published record. Use a ratio, a range, or a description instead of the figure, and say in the record that the exact number is not public.
+
+Structure for a decision record:
+
+```
+## The decision
+## What I knew at the time
+## Options
+## What I picked and why
+## What happened
+## What I would do differently
+## Open questions on my own note
+```
+
+When the record is written, move the note:
+
+```bash
+git mv journal/inbox/<note>.md journal/used/<note>.md
+```
+
+If the brief instead says `"source": "backlog"`, the inbox was empty. Write an outside case note into `content/cases` from the backlog topic, and do not touch the journal folders.
+
 ## Weekly review track
 
 Sunday is different. Do not write opinions. Prepare a draft only:

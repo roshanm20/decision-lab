@@ -2,106 +2,110 @@
 
 The daily run picks the first unticked item under today's track. Tick an item with `[x]` when the piece is written.
 
-Add your own items freely. The automation appends a suggestion only when a track runs empty, and it marks its own suggestions with `(auto)` so you can tell them apart and delete the weak ones.
+Thursday is different. It takes the oldest note from `journal/inbox` and writes a decision record from my own work. The `case` section below is only the fallback for a week where I have not left a note.
 
-Keep at least five items live under each track. A thin backlog is how the quality drops.
+Add your own items freely. The automation appends a suggestion only when a track runs empty, and it marks its own with `(auto)` so the weak ones are easy to spot and delete.
+
+## What these topics are for
+
+I am a physics graduate moving into product and management. The honest version of that transition is not that I have ten years of P&L experience, because I do not. It is that I can build the thing, measure it properly, and reason about whether it should exist. So the topics here lean on measurement, unit economics, and product decisions in AI, which is where the physics actually transfers, and they stay close to the markets I have built in.
+
+Where a topic is something I have lived, it goes in the journal instead, and Thursday picks it up.
 
 ## bi-analysis
 
-Each one needs a real or clearly labelled synthetic dataset, a query or script, and a conclusion a manager could act on.
+Real or clearly labelled synthetic data, a query or script, and a conclusion a manager could act on.
 
 - [ ] Cohort retention on a public e-commerce transaction dataset, and what the curve shape says about the business
-- [ ] RFM segmentation, and where it misleads you when purchase frequency is seasonal
-- [ ] Funnel drop-off analysis when events are logged unreliably, and how to still get a defensible number
-- [ ] Building a churn early warning list from usage data, with the precision and recall tradeoff written out
+- [ ] Funnel drop-off when events are logged unreliably, and how to still get a defensible number
 - [ ] Pricing elasticity from observational data, and why the naive regression is wrong
-- [ ] Marketing attribution, last touch against a simple time decay model, on the same dataset
-- [ ] Inventory stockout cost model for a D2C brand, and the reorder point that falls out of it
+- [ ] An A/B test that came out flat, and separating underpowered from actually no effect
+- [ ] Churn early warning list from usage data, with the precision and recall tradeoff written out
+- [ ] Home loan approval funnel analysis, where applications die and which stage is worth fixing
+- [ ] Cannibalisation check when a cheaper plan launches, using difference in differences
+- [ ] Support ticket clustering to find the three product problems worth fixing
 - [ ] Unit economics of a delivery business at three density levels, built bottom up
-- [ ] A/B test that came out flat, and how to work out whether it was underpowered or the idea was wrong
-- [ ] Cannibalisation check when a cheaper plan is launched, using a difference in differences setup
-- [ ] Support ticket text clustering to find the three product problems worth fixing
+- [ ] Marketing attribution, last touch against time decay, on the same dataset
+- [ ] Measurement error in a product metric, and how much of a reported movement is noise
 - [ ] Sales pipeline conversion by stage, and where the forecast breaks
 
 ## teardown
 
-Pick a real AI product. Look at the product, the pricing, the wedge, the moat, and the part that will break. No press release summaries.
+Real AI products, and mostly ones in the lane I have built in: competitive intelligence, research and analyst tooling, B2B AI that replaces a chunk of a services engagement. I have shipped one of these, so I have standing to be specific about what is hard.
 
-- [ ] Cursor, and whether the wrapper moat holds when the model providers ship the same feature
-- [ ] Notion AI pricing, seat based against usage based, and what that choice commits them to
+- [ ] Crayon and Klue in competitive intelligence, what they charge for and what they cannot automate
+- [ ] AlphaSense, the moat when the moat is licensed content rather than model quality
+- [ ] Harvey and legal AI, why a narrow vertical with high billing rates is the easiest place to start and the hardest to hold
 - [ ] Perplexity, the shape of the business under the cost of every query
-- [ ] Harvey and legal AI, why a narrow vertical with high billing rates is the easiest market to enter
 - [ ] Glean and enterprise search, the distribution problem inside a company
-- [ ] Zomato and Swiggy AI features, whether any of them change the unit economics or only the interface
-- [ ] Jasper, what happened when the underlying capability got commoditised
-- [ ] GitHub Copilot, the gross margin question on a fixed price AI product
+- [ ] Cursor, whether the wrapper moat holds when the model providers ship the same feature
+- [ ] An AI product priced per seat against one priced per unit of work, and what each pricing choice commits the company to
 - [ ] Sarvam and Indic language models, the case for a country specific model company
 - [ ] Salesforce Agentforce, whether an incumbent's AI layer is a product or a retention tool
-- [ ] Synthesia, why video is a better AI product shape than text
+- [ ] GitHub Copilot, the gross margin question on a fixed price AI product
 - [ ] An AI product that failed in the last two years, and the decision that killed it
+- [ ] The consulting deliverable as a product, which parts of a research report automate and which do not
 
 ## metric
 
-One metric per file. Definition, the exact formula, the edge cases, how it gets gamed, and what to pair it with.
+One metric per file. Formula, edge cases, how it gets gamed, what to pair it with.
 
 - [ ] Activation rate for a B2B analytics product, and why the definition decides the roadmap
+- [ ] Gross margin for an AI product where inference is the main cost
 - [ ] Net revenue retention, what it hides when the customer count is small
-- [ ] Contribution margin per order for a quick commerce business
-- [ ] DAU over MAU, when the ratio is a real signal and when it is theatre
 - [ ] CAC payback, cash based against accrual based, and which one a founder should watch
 - [ ] Time to first value, how to instrument it without guessing
-- [ ] Gross margin for an AI product where inference is the main cost
-- [ ] Feature adoption depth, and why breadth of adoption is the wrong thing to measure
-- [ ] Support contact rate per hundred orders, as an operations quality metric
-- [ ] Forecast accuracy for a sales team, and the metric that stops sandbagging
-- [ ] Employee productivity metrics for a team using AI tools, and the three ways they go wrong
+- [ ] Output quality for an AI product, when the output is a document a human has to trust
+- [ ] Confidence and calibration as a product metric, not a model metric
+- [ ] Contribution margin per order for a quick commerce business
+- [ ] DAU over MAU, when the ratio is a real signal and when it is theatre
 - [ ] North star metric selection, the test a candidate metric has to pass
+- [ ] Forecast accuracy for a sales team, and the metric that stops sandbagging
+- [ ] Support contact rate per hundred orders, as an operations quality metric
 
 ## case
 
-Write it like a case note. Situation, the decision on the table, the options with numbers, your call, and what would change your mind.
+**Fallback only.** Used on a Thursday when `journal/inbox` is empty. My own decisions are better material, so the aim is for this list to go untouched.
 
 - [ ] A profitable services firm deciding whether to build a product, with the cash flow consequences laid out
 - [ ] Pricing a B2B AI tool when the buyer's saving is clear but their budget line does not exist
+- [ ] A founder choosing between one large enterprise pilot and ten small paying customers
 - [ ] Whether to keep a loss making segment that brings in the customers who buy the profitable one
-- [ ] Build against buy for an internal analytics stack at a two hundred person company
-- [ ] A founder deciding between a large pilot with one enterprise and ten small paying customers
-- [ ] Deciding to sunset a feature that a loud minority of customers depend on
-- [ ] Choosing a market entry sequence for an Indian SaaS product going to the US
+- [ ] Hiring a sales team against founder led sales, and at what revenue the switch pays for itself
+- [ ] Deciding to sunset a feature a loud minority depends on
+- [ ] Market entry sequence for an Indian SaaS product going to the US
 - [ ] Whether to raise prices when churn is already above plan
-- [ ] Hiring a sales team against founder led sales, at what revenue the switch pays for itself
-- [ ] A manufacturing firm deciding how much to spend on demand forecasting
 - [ ] Responding to a competitor who has cut prices by forty percent
 - [ ] Whether to open source the core of a commercial product
 
 ## sector-note
 
-Indian sectors mostly. Structure of the sector, who makes money, what is actually changing, and the number that matters.
+How a sector works. The players, where money is made along the chain, what is changing, and the one number that decides the outcome. Indian sectors mostly.
 
+- [ ] Housing finance in India, where an NBFC actually earns against a bank, and what the spread has to cover
 - [ ] Indian quick commerce, where the margin comes from and whether it survives a funding slowdown
+- [ ] Market and competitive research as an industry, who buys it and what they pay
 - [ ] UPI and the payments business, how anyone makes money on a zero MDR rail
 - [ ] Indian SaaS selling to the US, the gross margin and sales efficiency picture
-- [ ] Ed tech after the correction, which parts of the model actually worked
-- [ ] Insurance distribution in India, why the broker layer persists
-- [ ] Logistics and warehousing, the effect of GST on network design
-- [ ] Indian pharma CDMO, the shift in who holds pricing power
-- [ ] Electric two wheelers, the unit economics against the subsidy schedule
-- [ ] Agri supply chain, the layers between farm gate and retail and what each one earns
 - [ ] IT services and AI, whether the pyramid staffing model can hold
 - [ ] Consumer lending and the NBFC model, where the risk actually sits
+- [ ] Insurance distribution in India, why the broker layer persists
 - [ ] Data centres in India, the demand case and the power constraint
+- [ ] Ed tech after the correction, which parts of the model actually worked
+- [ ] Indian pharma CDMO, the shift in who holds pricing power
+- [ ] Electric two wheelers, the unit economics against the subsidy schedule
 
 ## tool
 
-A small thing that works and that someone else could use. Under three hundred lines.
+Small things that work. Under three hundred lines each.
 
 - [x] Cohort retention table generator from a transactions CSV
-- [ ] Metric definition linter that checks a YAML metric spec for missing edge cases
 - [ ] Unit economics calculator that takes assumptions from a YAML file and prints a sensitivity table
-- [ ] A/B test power calculator with a plain language output
+- [ ] A/B test power calculator with a plain language output and an honest minimum detectable effect
+- [ ] Metric definition linter that checks a YAML metric spec for missing edge cases
 - [ ] Competitor pricing page tracker that diffs a saved snapshot
-- [ ] SQL query formatter and cost estimate stub for a warehouse dialect
-- [ ] Funnel chart generator that handles missing steps
-- [ ] Simple forecast baseline that any model has to beat before it is worth using
 - [ ] Dataset profiler that prints the five things to check before trusting a table
-- [ ] Case study note template generator with the sections prefilled
+- [ ] Simple forecast baseline that any model has to beat before it is worth using
+- [ ] Funnel chart generator that handles missing steps
+- [ ] Error bar helper that turns a conversion count into a confidence interval, for people who quote percentages off forty users
+- [ ] Case note template generator with the sections prefilled

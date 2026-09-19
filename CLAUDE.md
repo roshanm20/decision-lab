@@ -2,7 +2,9 @@
 
 This repo is a working notebook on business intelligence, AI product decisions, and management problems. It is maintained by Muhammed Roshan M and is meant to be read by people who are evaluating how he thinks: recruiters, PGP admission interviewers, and potential collaborators.
 
-A daily GitHub Action runs the `daily-build` skill, which adds one piece and commits it.
+A daily GitHub Action runs the `daily-build` skill, which adds one piece and commits it. The same skill can be run by hand with `/daily-build` in Claude Code.
+
+Roshan is a physics graduate moving into product and management. The repo's job is to show that he can build, measure, and decide, not to claim experience he does not have. Overclaiming on his behalf damages it more than a thin week does.
 
 ## Read before writing anything
 
@@ -10,7 +12,7 @@ A daily GitHub Action runs the `daily-build` skill, which adds one piece and com
 
 ## How a day runs
 
-1. Run `python scripts/pick_track.py`. It prints today's track, target directory, and the next topic from `BACKLOG.md`.
+1. Run `python scripts/pick_track.py`. It prints today's track, target directory, and the next topic from `BACKLOG.md`. On Thursdays it points at the oldest note in `journal/inbox` instead, and the skill's decision record section governs that day.
 2. Do the work for that track. Research properly with web search. Real sources, real numbers.
 3. Write the file into the directory the script gave you, named `YYYY-MM-DD-slug.md`.
 4. Tick the backlog item off in `BACKLOG.md`.
@@ -34,6 +36,7 @@ One commit per day covering the new piece and the index refresh. Do not split in
 - Never write more than one content piece in a run.
 - Never edit or rewrite a piece from a previous day, except to fix a factual error. If you fix one, say so in the commit message.
 - Never invent a source, a URL, a filing, or a figure.
+- Never state anything about Roshan's own companies or projects that is not written in a journal note. CompEdge, Nayrix, Dharti, the Mercor eval work. No web research about them, no inference, no plausible filler. A gap becomes an open question, not a guess.
 - Never commit if the day's piece already exists. Check the target directory first and exit quietly.
 - Never touch `weekly/` review files that already have content under the "My read" heading. Those are written by hand.
 - If research fails and you cannot source the claims, write nothing and exit. A missing day is fine.
