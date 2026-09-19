@@ -6,24 +6,25 @@ One time setup. Takes about fifteen minutes. After this the repo runs itself eve
 
 It has to be **public**, otherwise none of this shows on your profile.
 
-With the GitHub CLI, from inside this folder:
+The git history is already in the folder you unzipped, with two commits authored as you, so there is no `git init` to run. Check it first:
 
 ```bash
-git init
-git add -A
-git commit -m "Set up the repo, standards, rotation, and daily workflow"
+git log --pretty=format:'%h %an <%ae> %s'
+```
+
+Both lines should say `Muhammed Roshan M <muhammedroshanmangat@gmail.com>`. That author email is what decides whether these commits count on your contribution graph.
+
+Then, with the GitHub CLI:
+
+```bash
 gh repo create decision-lab --public --source . --remote origin \
   --description "Business intelligence, AI product decisions, and how companies make money. One worked piece a day." \
   --push
 ```
 
-Or create it in the browser at github.com/new and then:
+Or create it in the browser at github.com/new, empty, no README, and then:
 
 ```bash
-git init
-git add -A
-git commit -m "Set up the repo, standards, rotation, and daily workflow"
-git branch -M main
 git remote add origin https://github.com/roshanm20/decision-lab.git
 git push -u origin main
 ```
