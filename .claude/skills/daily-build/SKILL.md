@@ -176,12 +176,28 @@ python scripts/build_index.py
 
 Fix any frontmatter problems it reports in today's file.
 
-Git identity is set by the workflow. Do not change it.
+**The commit author matters more than anything else in this file.** The action
+sets git's user to `claude[bot]` before you run, and a commit authored by the bot
+does not appear on Roshan's contribution graph, which makes the whole repo
+invisible on his profile. So always pass the author explicitly:
 
 ```bash
 git add -A
-git commit -m "<track>: <short description>"
+git commit --author="Muhammed Roshan M <muhammedroshanmangat@gmail.com>" \
+  -m "<track>: <short description>"
 git push
 ```
+
+The committer stays `claude[bot]`, which is honest and correct, since the bot did
+commit it. GitHub counts the author, so this is what makes it count for Roshan.
+
+After pushing, check it worked:
+
+```bash
+git log -1 --pretty=format:'%an <%ae>'
+```
+
+That must print `Muhammed Roshan M <muhammedroshanmangat@gmail.com>`. If it does
+not, fix it with `git commit --amend --author=...` and force push.
 
 One commit. Do not split it to make the history look busier.

@@ -68,6 +68,9 @@ jobs:
           # Runs on the Claude subscription. No API key, no metered billing.
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: "/daily-build"
+          # Temporary, so failures are readable in the run log. Turn this off
+          # once the daily run is known good, since this repo is public.
+          show_full_output: true
           claude_args: |
             --max-turns 80
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch"

@@ -22,7 +22,7 @@ Roshan is a physics graduate moving into product and management. The repo's job 
 
 ## Commit rules
 
-The commit author must be Muhammed Roshan M. The workflow sets this before the skill runs, so do not change git config yourself.
+The commit author must be Muhammed Roshan M <muhammedroshanmangat@gmail.com>. The action overrides git's configured user with `claude[bot]` before the skill runs, so setting git config is not enough. Pass `--author` on the commit itself, every time. A commit authored by the bot does not show on Roshan's contribution graph, which defeats the point of the repo.
 
 Commit message format: `track: short description of the piece`
 
