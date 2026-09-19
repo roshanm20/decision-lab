@@ -1,0 +1,64 @@
+name: Daily build
+
+on:
+  schedule:
+    # 01:30 UTC is 07:00 IST. GitHub runs scheduled workflows only from the
+    # default branch, and queues can delay a run by a few minutes.
+    - cron: "30 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: daily-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set the commit identity
+        # This is what makes the commits count on Roshan's contribution graph.
+        # The email has to be one that is verified on his GitHub account.
+        run: |
+          git config user.name "Muhammed Roshan M"
+          git config user.email "muhammedroshanmangat@gmail.com"
+
+      - name: Run the daily build
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Generated locally with: claude setup-token
+          # Stored as a repository secret. Uses the Claude subscription, not API billing.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: "/daily-build"
+          claude_args: |
+            --max-turns 60
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch"
+          # To pin a model, add a --model line above, for example:
+          #   --model claude-opus-5
+          # Left out on purpose so the action uses its current default and the
+          # run cannot fail on a model name that has been retired.
+
+      - name: Report what landed
+        if: always()
+        run: |
+          echo "### Last commit" >> "$GITHUB_STEP_SUMMARY"
+          git log -1 --pretty=format:'%h %an %s' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Index check" >> "$GITHUB_STEP_SUMMARY"
+          python scripts/build_index.py --check >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
