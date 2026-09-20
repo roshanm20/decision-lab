@@ -62,10 +62,11 @@ Anything that cannot clear it does not get committed. Gaps in the history are on
 
 <!-- INDEX:START -->
 
-**1 piece so far.** 1 tool
+**2 pieces so far.** 1 tool, 1 weekly review
 
 Most recent:
 
+- `2026-09-20` [Week one review, repo setup plus one tool](weekly/2026-09-20-week-review.md) . Not yet written. This is a draft, the read is mine to add.
 - `2026-09-19` [Cohort retention table from a transactions CSV](tools/2026-09-19-cohort-retention-table-generator.md) . A standard library script that turns a transactions file into a monthly cohort table, and blanks out the months a cohort has not reached yet instead of printing them as zero retention.
 
 Full list in [docs/INDEX.md](docs/INDEX.md).
