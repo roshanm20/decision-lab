@@ -1,10 +1,10 @@
 # Index
 
-2 pieces in the repo.
+3 pieces in the repo.
 
 | Track | Pieces |
 | --- | --- |
-| Business intelligence builds | 0 |
+| Business intelligence builds | 1 |
 | Business intelligence analyses | 0 |
 | AI product teardowns | 0 |
 | Metric library | 0 |
@@ -15,6 +15,11 @@
 | Tools | 0 |
 | Tools, earlier naming | 1 |
 | Weekly reviews | 1 |
+
+## Business intelligence builds
+
+- **[Why summing daily unique users overstates monthly reach](../bi/analyses/2026-09-21-unique-user-double-counting.md)** (2026-09-21)  
+  Summing daily or per-channel unique-user counts overstates true reach, and the overstatement gets worse as a product gets stickier, so period-level reach needs a direct distinct count, not a rollup of daily numbers.
 
 ## Tools, earlier naming
 

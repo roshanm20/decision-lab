@@ -62,10 +62,11 @@ Anything that cannot clear it does not get committed. Gaps in the history are on
 
 <!-- INDEX:START -->
 
-**2 pieces so far.** 1 tool, 1 weekly review
+**3 pieces so far.** 1 business intelligence build, 1 tool, 1 weekly review
 
 Most recent:
 
+- `2026-09-21` [Why summing daily unique users overstates monthly reach](bi/analyses/2026-09-21-unique-user-double-counting.md) . Summing daily or per-channel unique-user counts overstates true reach, and the overstatement gets worse as a product gets stickier, so period-level reach needs a direct distinct count, not a rollup of daily numbers.
 - `2026-09-20` [Week one review, repo setup plus one tool](weekly/2026-09-20-week-review.md) . Not yet written. This is a draft, the read is mine to add.
 - `2026-09-19` [Cohort retention table from a transactions CSV](tools/2026-09-19-cohort-retention-table-generator.md) . A standard library script that turns a transactions file into a monthly cohort table, and blanks out the months a cohort has not reached yet instead of printing them as zero retention.
 

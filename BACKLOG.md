@@ -64,6 +64,7 @@ One metric per file. Formula, edge cases, how it gets gamed, what to pair it wit
 - [ ] North star metric selection, the test a candidate metric has to pass
 - [ ] Forecast accuracy for a sales team, and the metric that stops sandbagging
 - [ ] Support contact rate per hundred orders, as an operations quality metric
+- [ ] (auto) Whether dbt's new materialised metric views (Databricks, dbt Core 2.0.1, September 2026) handle a non-additive metric like distinct count correctly when queried at a coarser grain than it was built at
 
 ## case
 
