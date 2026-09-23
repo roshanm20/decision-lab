@@ -1,36 +1,45 @@
 #!/usr/bin/env python3
-"""Decide whether this scheduled run is today's run, and how long to wait.
+"""Decide whether this scheduled run should build, and how long to wait first.
 
-The workflow is scheduled in six windows a day. Only one of them is today's,
-picked deterministically from the date, so the commit lands at a different time
-each day without ever landing twice.
+The workflow fires in eight windows a day (UTC hours below). One of the
+first six is today's chosen window, picked from a hash of the date, so the
+commit lands at a different time each day. The rule:
 
-Deterministic matters. If the choice were actually random per run, two windows
-could both decide to go and the day would get two commits, or none would and the
-day would be skipped.
+  - Before the chosen window: skip.
+  - The chosen window: run, after a wait of up to 45 minutes, also drawn
+    from the date, so the minute varies too.
+  - Any later window, including the two catch-up windows: run at once if
+    today's commit has not landed yet, otherwise skip.
+
+So if GitHub drops or delays the chosen run, or the run fails, the next
+window picks the day up. Duplicates are prevented by checking whether the
+day has landed (scripts/daylog.py) both here and in the picker.
 
 Outputs GitHub Actions key=value lines on stdout:
-    run=true|false
-    sleep_seconds=<int>
-    window_ist=<HH:MM>
+    date=<YYYY-MM-DD>  run=true|false  sleep_seconds=<int>  window_ist=<HH:MM>
+    catchup=true|false  last_window=true|false
 
-Usage, inside the workflow:
-    python scripts/should_run_now.py --schedule "$EVENT_SCHEDULE"
-
-Locally, to see what the next fortnight looks like:
+Usage:
+    python scripts/should_run_now.py --schedule "17 4 * * *"
     python scripts/should_run_now.py --preview 14
 """
+
+from __future__ import annotations
 
 import argparse
 import datetime as dt
 import hashlib
+import pathlib
 import sys
 
-# UTC hours the workflow is scheduled at. Minute 17 on purpose: GitHub queues
-# scheduled jobs and the top of the hour is the most congested minute.
-WINDOWS = [1, 4, 7, 10, 13, 16]
-MINUTE = 17
-MAX_EXTRA_SLEEP = 45 * 60  # up to 45 minutes, so the minute varies too
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from daylog import landed_today, run_date  # noqa: E402
+
+WINDOWS = [1, 4, 7, 10, 13, 16]   # one of these is chosen each day
+CATCHUP = [19, 22]                # only ever used to rescue a missed day
+ALL_WINDOWS = WINDOWS + CATCHUP
+MINUTE = 17                       # not :00, the most congested minute on GitHub
+MAX_EXTRA_SLEEP = 45 * 60
 SALT = "decision-lab"
 
 
@@ -43,15 +52,28 @@ def chosen_window(date: dt.date) -> int:
 
 
 def extra_sleep(date: dt.date) -> int:
-    # A second, independent draw from the same digest.
     return (_digest(date) // 1000) % MAX_EXTRA_SLEEP
 
 
-def ist(hour: int, minute: int, sleep_s: int) -> str:
-    base = dt.datetime(2000, 1, 1, hour, minute) + dt.timedelta(
-        hours=5, minutes=30, seconds=sleep_s
-    )
+def ist(hour: int, minute: int, sleep_s: int = 0) -> str:
+    base = dt.datetime(2000, 1, 1, hour, minute) + dt.timedelta(hours=5, minutes=30, seconds=sleep_s)
     return base.strftime("%H:%M")
+
+
+def decide(date: dt.date, triggered_hour: int | None, landed: bool) -> dict:
+    """Pure decision, so it can be tested without git or a clock."""
+    window, sleep_s = chosen_window(date), extra_sleep(date)
+    out = {"window_ist": ist(window, MINUTE, sleep_s), "catchup": False,
+           "last_window": triggered_hour == ALL_WINDOWS[-1]}
+    if triggered_hour is None:                       # manual run
+        return {**out, "run": True, "sleep_seconds": 0}
+    if landed:
+        return {**out, "run": False, "sleep_seconds": 0}
+    if triggered_hour == window:
+        return {**out, "run": True, "sleep_seconds": sleep_s}
+    if triggered_hour > window:
+        return {**out, "run": True, "sleep_seconds": 0, "catchup": True}
+    return {**out, "run": False, "sleep_seconds": 0}
 
 
 def main() -> int:
@@ -60,64 +82,32 @@ def main() -> int:
     ap.add_argument("--date", help="override the date, as YYYY-MM-DD")
     ap.add_argument("--preview", type=int, help="print the next N days and exit")
     args = ap.parse_args()
-
-    today = dt.date.fromisoformat(args.date) if args.date else dt.datetime.utcnow().date()
+    today = dt.date.fromisoformat(args.date) if args.date else run_date()
 
     if args.preview:
-        print(f"{'date':12} {'weekday':10} {'UTC':>6}  {'lands IST':>9}  after sleep")
+        print(f"{'date':12} {'weekday':10} {'UTC':>6}  {'lands IST':>9}")
         for i in range(args.preview):
             d = today + dt.timedelta(days=i)
             w, s = chosen_window(d), extra_sleep(d)
-            print(
-                f"{d.isoformat():12} {d.strftime('%A'):10} "
-                f"{w:02d}:{MINUTE:02d}  {ist(w, MINUTE, s):>9}  "
-                f"+{s // 60}m{s % 60:02d}s"
-            )
+            print(f"{d.isoformat():12} {d.strftime('%A'):10} {w:02d}:{MINUTE:02d}  {ist(w, MINUTE, s):>9}")
         return 0
 
-    window = chosen_window(today)
-    sleep_s = extra_sleep(today)
+    triggered = None
+    if args.schedule:
+        try:
+            triggered = int(args.schedule.split()[1])
+        except (IndexError, ValueError):
+            print(f"Could not read an hour from {args.schedule!r}, treating as a manual run.", file=sys.stderr)
 
-    # A manual run always goes ahead, with no wait.
-    if not args.schedule:
-        print("run=true")
-        print("sleep_seconds=0")
-        print(f"window_ist={ist(window, MINUTE, 0)}")
-        print("Manual run, going ahead immediately.", file=sys.stderr)
-        return 0
-
-    try:
-        triggered_hour = int(args.schedule.split()[1])
-    except (IndexError, ValueError):
-        print("run=true")
-        print("sleep_seconds=0")
-        print(f"window_ist={ist(window, MINUTE, 0)}")
-        print(
-            f"Could not read an hour from schedule {args.schedule!r}. "
-            "Going ahead rather than skipping the day.",
-            file=sys.stderr,
-        )
-        return 0
-
-    if triggered_hour != window:
-        print("run=false")
-        print("sleep_seconds=0")
-        print(f"window_ist={ist(window, MINUTE, sleep_s)}")
-        print(
-            f"Not today's window. Today runs at {window:02d}:{MINUTE:02d} UTC, "
-            f"this trigger was {triggered_hour:02d}:{MINUTE:02d}. Skipping.",
-            file=sys.stderr,
-        )
-        return 0
-
-    print("run=true")
-    print(f"sleep_seconds={sleep_s}")
-    print(f"window_ist={ist(window, MINUTE, sleep_s)}")
-    print(
-        f"Today's window. Waiting {sleep_s // 60}m{sleep_s % 60:02d}s, "
-        f"then building. Lands around {ist(window, MINUTE, sleep_s)} IST.",
-        file=sys.stderr,
-    )
+    result = decide(today, triggered, landed_today(today))
+    print(f"date={today.isoformat()}")
+    for key in ("run", "sleep_seconds", "window_ist", "catchup", "last_window"):
+        value = result[key]
+        print(f"{key}={str(value).lower() if isinstance(value, bool) else value}")
+    reason = ("already landed today" if not result["run"] and triggered is not None and triggered >= chosen_window(today)
+              else "before today's window" if not result["run"]
+              else "catch-up for a missed day" if result["catchup"] else "today's run")
+    print(f"Decision: {'run' if result['run'] else 'skip'}, {reason}.", file=sys.stderr)
     return 0
 
 

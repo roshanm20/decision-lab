@@ -1,0 +1,75 @@
+name: Weekly
+
+# Monday 08:00 IST. Opens the review issue that lands in Roshan's inbox, and,
+# only if a PROFILE_TOKEN secret exists, refreshes the decision-lab section of
+# his profile README.
+on:
+  schedule:
+    - cron: "30 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    env:
+      PROFILE_TOKEN: ${{ secrets.PROFILE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: python -m pip install --quiet pytest
+
+      - name: Open the weekly review issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TESTS=$(python -m pytest --collect-only -q 2>/dev/null | grep -Eo '^[0-9]+ tests? collected' | grep -Eo '^[0-9]+' || echo "?")
+          TOOLS=$(python -c "from decisionlab.registry import load_tools; print(len(load_tools()))")
+          LOG=$(find weekly -name '*-week-log.md' 2>/dev/null | sort | tail -1)
+          {
+            echo "Last week's output. Anything that does not hold up, delete it or tell Claude in a chat."
+            echo ""
+            echo "**Now: $TOOLS tools, $TESTS tests.**"
+            [ -n "$LOG" ] && echo "Week log: [\`$LOG\`](https://github.com/${GITHUB_REPOSITORY}/blob/main/$LOG)"
+            echo ""
+            echo "## Committed in the last 7 days"
+            echo ""
+            git log --since="7 days ago" --format="- \`%ad\` %s" --date=short
+            echo ""
+            echo "## Two minutes of checking"
+            echo ""
+            echo "- [ ] Open one tool page. Does the example show real output, and does 'What it does not do' admit real limits?"
+            echo "- [ ] Open one note. Are the numbers sourced, and could you defend its position in an interview?"
+            echo "- [ ] Anything that overclaims about your experience? It should not exist, flag it if it does."
+            echo ""
+            echo "## For your journal, one note is enough"
+            echo ""
+            echo "Thursday turns your oldest note in \`journal/inbox\` into a decision record. Without one it builds a product tool instead, which is fine but less yours. Pick any one:"
+            echo ""
+            echo "- A decision you made on CompEdge or at Nayrix this month, and the option you rejected."
+            echo "- Something a user or client said that changed what you built."
+            echo "- A number you now know that you guessed wrong at the start."
+            echo ""
+            echo "Close it once you have looked."
+          } > body.md
+          gh issue create --title "Weekly review, week ending $(date -u -d 'yesterday' +'%d %b %Y')" --body-file body.md --assignee "$GITHUB_REPOSITORY_OWNER"
+
+      - name: Refresh the profile README section
+        if: env.PROFILE_TOKEN != ''
+        run: |
+          git clone -q "https://x-access-token:${PROFILE_TOKEN}@github.com/${GITHUB_REPOSITORY_OWNER}/${GITHUB_REPOSITORY_OWNER}.git" profile
+          python scripts/profile_section.py profile/README.md
+          cd profile
+          if git diff --quiet; then echo "No change."; exit 0; fi
+          git -c user.name="Muhammed Roshan M" -c user.email="muhammedroshanmangat@gmail.com" \
+            commit -qam "Update the decision-lab section"
+          git push -q

@@ -1,226 +1,188 @@
 #!/usr/bin/env python3
-"""Rebuild docs/INDEX.md and the index block inside README.md.
+"""Rebuild docs/INDEX.md and the generated block in README.md.
 
-Reads the frontmatter of every markdown piece under the content directories,
-groups by track, and writes the index. Also flags files with bad or missing
-frontmatter so they get fixed instead of sitting there broken.
+Tools come from decisionlab/registry.py, so a registered tool always shows
+up. Notes come from the frontmatter of markdown files in the note folders.
+Weekly logs are listed separately and are not counted as pieces, because a
+log of what happened is not a piece of work.
 
-Usage:
     python scripts/build_index.py
-    python scripts/build_index.py --check    # report problems, write nothing
+    python scripts/build_index.py --check    # report frontmatter problems only
 """
+
+from __future__ import annotations
 
 import argparse
 import pathlib
 import re
+import subprocess
 import sys
 from collections import defaultdict
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 INDEX = ROOT / "docs" / "INDEX.md"
 README = ROOT / "README.md"
+START, END = "<!-- INDEX:START -->", "<!-- INDEX:END -->"
 
-SEARCH_DIRS = [
-    "content/decisions",
-    "content/scans",
-    "content/teardowns",
-    "content/cases",
-    "content/sector-notes",
-    "bi/analyses",
-    "bi/metric-library",
-    "tools",
-    "weekly",
+NOTE_DIRS = ["content/notes", "content/decisions", "content/teardowns", "content/cases",
+             "content/sector-notes", "content/scans", "bi/analyses", "bi/metric-library", "tools"]
+LOG_DIRS = ["weekly"]
+SKIP_NAMES = {"README.MD", "CHANGELOG.MD", "_TEMPLATE.MD"}
+
+TRACKS = [  # (label, track ids that belong under it)
+    ("Applied notes, the tools used on real data", {"note"}),
+    ("Decisions from my own work", {"decision-record"}),
+    ("BI analyses", {"bi-build", "bi-analysis"}),
+    ("AI product teardowns", {"teardown"}),
+    ("Metric definitions", {"metric"}),
+    ("Case notes", {"case"}),
+    ("Sector notes", {"sector-note"}),
+    ("Innovation scans", {"innovation-scan"}),
+    ("Tool write-ups", {"tool", "build"}),
 ]
-
-TRACK_ORDER = [
-    ("bi-build", "Business intelligence builds"),
-    ("bi-analysis", "Business intelligence analyses"),
-    ("teardown", "AI product teardowns"),
-    ("metric", "Metric library"),
-    ("decision-record", "Decision records from my own work"),
-    ("case", "Management case notes"),
-    ("innovation-scan", "Innovation scans"),
-    ("sector-note", "Sector notes"),
-    ("build", "Tools"),
-    ("tool", "Tools, earlier naming"),
-    ("weekly-review", "Weekly reviews"),
-]
-
-SINGULAR = {
-    "bi-build": "business intelligence build",
-    "bi-analysis": "business intelligence analysis",
-    "innovation-scan": "innovation scan",
-    "build": "tool",
-    "teardown": "AI product teardown",
-    "metric": "metric",
-    "decision-record": "decision record",
-    "case": "management case note",
-    "sector-note": "sector note",
-    "tool": "tool",
-    "weekly-review": "weekly review",
-}
-
+LOG_TRACKS = {"weekly-log", "weekly-review"}
 REQUIRED = ["title", "date", "track", "summary"]
-START = "<!-- INDEX:START -->"
-END = "<!-- INDEX:END -->"
 
 
-def parse_frontmatter(path: pathlib.Path):
-    """Return (fields dict, list of problems)."""
+def frontmatter(path: pathlib.Path):
     text = path.read_text(encoding="utf-8")
-    problems = []
+    where = path.relative_to(ROOT).as_posix()
     if not text.startswith("---"):
-        return {}, [f"{path.relative_to(ROOT)}: no frontmatter block"]
+        return {}, [f"{where}: no frontmatter block"]
     parts = text.split("---", 2)
     if len(parts) < 3:
-        return {}, [f"{path.relative_to(ROOT)}: frontmatter not closed"]
+        return {}, [f"{where}: frontmatter not closed"]
     fields = {}
     for line in parts[1].strip().splitlines():
-        if ":" not in line:
-            continue
-        key, _, value = line.partition(":")
-        fields[key.strip()] = value.strip().strip('"').strip("'")
-    for key in REQUIRED:
-        if not fields.get(key):
-            problems.append(f"{path.relative_to(ROOT)}: missing '{key}'")
-    date = fields.get("date", "")
-    if date and not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
-        problems.append(f"{path.relative_to(ROOT)}: date '{date}' is not YYYY-MM-DD")
+        if ":" in line:
+            key, _, value = line.partition(":")
+            fields[key.strip()] = value.strip().strip('"').strip("'")
+    problems = [f"{where}: missing '{k}'" for k in REQUIRED if not fields.get(k)]
+    if fields.get("date") and not re.match(r"^\d{4}-\d{2}-\d{2}$", fields["date"]):
+        problems.append(f"{where}: date '{fields['date']}' is not YYYY-MM-DD")
+    known = set().union(*(ids for _, ids in TRACKS)) | LOG_TRACKS
+    if fields.get("track") and fields["track"] not in known:
+        problems.append(f"{where}: unknown track '{fields['track']}'")
+    if "not yet written" in fields.get("summary", "").lower():
+        problems.append(f"{where}: summary is a placeholder, not a summary")
     return fields, problems
 
 
-def collect():
-    pieces, problems = [], []
-    for rel in SEARCH_DIRS:
-        d = ROOT / rel
-        if not d.exists():
+def collect(dirs):
+    items, problems = [], []
+    for d in dirs:
+        base = ROOT / d
+        if not base.exists():
             continue
-        for path in sorted(d.rglob("*.md")):
-            if path.name.upper() in {"README.MD", "CHANGELOG.MD", "_TEMPLATE.MD"}:
+        for path in sorted(base.rglob("*.md")):
+            if path.name.upper() in SKIP_NAMES:
                 continue
-            fields, probs = parse_frontmatter(path)
-            problems.extend(probs)
-            if not fields.get("title"):
-                continue
-            pieces.append(
-                {
-                    "title": fields["title"],
-                    "date": fields.get("date", ""),
-                    "track": fields.get("track", "unsorted"),
-                    "summary": fields.get("summary", ""),
-                    "sources": fields.get("sources", "0"),
-                    "path": path.relative_to(ROOT).as_posix(),
-                }
-            )
-    return pieces, problems
+            fields, probs = frontmatter(path)
+            problems += probs
+            if fields.get("title"):
+                items.append({**fields, "path": path.relative_to(ROOT).as_posix()})
+    return items, problems
 
 
-def plural(n: int) -> str:
-    return "piece" if n == 1 else "pieces"
+def test_count() -> int:
+    proc = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q"], cwd=ROOT,
+                          capture_output=True, text=True)
+    m = re.search(r"(\d+) tests? collected", proc.stdout)
+    if m:
+        return int(m.group(1))
+    return sum(t.read_text().count("def test_") for t in (ROOT / "tests").glob("test_*.py"))
 
 
-def render_index(pieces):
+def plural(n, word):
+    return f"{n} {word}" + ("" if n == 1 else "s")
+
+
+def tools_by_persona():
+    from decisionlab.registry import PERSONAS, load_tools
+    grouped = defaultdict(list)
+    for _, meta in load_tools():
+        grouped[meta["persona"]].append(meta)
+    return PERSONAS, grouped
+
+
+def render_tools(link_prefix: str) -> list:
+    personas, grouped = tools_by_persona()
+    out = []
+    for key, label in personas.items():
+        if not grouped.get(key):
+            continue
+        out += [f"**{label}**", ""]
+        for meta in grouped[key]:
+            out.append(f"- [`{meta['name']}`]({link_prefix}{meta['doc']}) {meta['summary']}")
+        out.append("")
+    return out
+
+
+def render_index(notes, logs, n_tests) -> str:
+    _, grouped = tools_by_persona()
+    n_tools = sum(len(v) for v in grouped.values())
+    out = ["# Index", "", f"{plural(n_tools, 'tool')}, {plural(n_tests, 'test')}, {plural(len(notes), 'note')}.", "",
+           "## Tools", ""] + render_tools("../")
     by_track = defaultdict(list)
-    for p in pieces:
-        by_track[p["track"]].append(p)
-
-    out = ["# Index", ""]
-    out.append(f"{len(pieces)} {plural(len(pieces))} in the repo.")
-    out.append("")
-    out.append("| Track | Pieces |")
-    out.append("| --- | --- |")
-    for track_id, label in TRACK_ORDER:
-        out.append(f"| {label} | {len(by_track.get(track_id, []))} |")
-    out.append("")
-
-    for track_id, label in TRACK_ORDER:
-        items = sorted(by_track.get(track_id, []), key=lambda x: x["date"], reverse=True)
-        if not items:
+    for n in notes:
+        by_track[n["track"]].append(n)
+    out += ["## Notes", ""]
+    for label, ids in TRACKS:
+        group = sorted((n for t in ids for n in by_track.get(t, [])), key=lambda n: n["date"], reverse=True)
+        if not group:
             continue
-        out.append(f"## {label}")
+        out += [f"### {label}", ""]
+        for n in group:
+            out += [f"- **[{n['title']}](../{n['path']})** ({n['date']})  ", f"  {n['summary']}"]
         out.append("")
-        for p in items:
-            out.append(f"- **[{p['title']}]({'../' + p['path']})** ({p['date']})  ")
-            out.append(f"  {p['summary']}")
+    if logs:
+        out += ["## Weekly logs", ""]
+        for n in sorted(logs, key=lambda n: n["date"], reverse=True):
+            out.append(f"- [{n['title']}](../{n['path']}) ({n['date']})")
         out.append("")
-
-    leftovers = {k: v for k, v in by_track.items() if k not in dict(TRACK_ORDER)}
-    if leftovers:
-        out.append("## Unsorted")
-        out.append("")
-        for track_id, items in sorted(leftovers.items()):
-            for p in items:
-                out.append(f"- [{p['title']}]({'../' + p['path']}) (track: {track_id})")
-        out.append("")
-
     return "\n".join(out).rstrip() + "\n"
 
 
-def render_readme_block(pieces):
-    latest = sorted(pieces, key=lambda x: x["date"], reverse=True)[:8]
-    by_track = defaultdict(int)
-    for p in pieces:
-        by_track[p["track"]] += 1
-
-    lines = [START, ""]
-    counts = ", ".join(
-        f"{by_track[t]} {label.lower() if by_track[t] != 1 else SINGULAR[t]}"
-        for t, label in TRACK_ORDER
-        if by_track.get(t)
-    )
-    lines.append(
-        f"**{len(pieces)} {plural(len(pieces))} so far.** "
-        f"{counts if counts else 'Nothing yet.'}"
-    )
-    lines.append("")
+def render_readme_block(notes, n_tests) -> str:
+    _, grouped = tools_by_persona()
+    n_tools = sum(len(v) for v in grouped.values())
+    lines = [START, "",
+             f"**{plural(n_tools, 'tool')} across {len(grouped)} groups, "
+             f"{plural(n_tests, 'test')}, {plural(len(notes), 'written note')}.**", ""]
+    lines += render_tools("")
+    latest = sorted(notes, key=lambda n: n["date"], reverse=True)[:5]
     if latest:
-        lines.append("Most recent:")
+        lines += ["**Latest notes**", ""]
+        lines += [f"- `{n['date']}` [{n['title']}]({n['path']})" for n in latest]
         lines.append("")
-        for p in latest:
-            lines.append(f"- `{p['date']}` [{p['title']}]({p['path']}) . {p['summary']}")
-        lines.append("")
-    lines.append(f"Full list in [docs/INDEX.md](docs/INDEX.md).")
-    lines.append("")
-    lines.append(END)
+    lines += ["Everything, including older notes and weekly logs: [docs/INDEX.md](docs/INDEX.md).", "", END]
     return "\n".join(lines)
-
-
-def update_readme(block):
-    if not README.exists():
-        return False
-    text = README.read_text(encoding="utf-8")
-    if START not in text or END not in text:
-        return False
-    pattern = re.compile(re.escape(START) + r".*?" + re.escape(END), re.DOTALL)
-    new = pattern.sub(block, text)
-    if new != text:
-        README.write_text(new, encoding="utf-8")
-    return True
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--check", action="store_true", help="report problems only")
+    ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
-
-    pieces, problems = collect()
-
-    for problem in problems:
-        print(f"PROBLEM: {problem}", file=sys.stderr)
-
+    notes, p1 = collect(NOTE_DIRS)
+    logs_raw, p2 = collect(LOG_DIRS)
+    logs = [l for l in logs_raw if l.get("track") in LOG_TRACKS]
+    notes += [l for l in logs_raw if l.get("track") not in LOG_TRACKS]
+    problems = p1 + p2
+    for p in problems:
+        print(f"PROBLEM: {p}", file=sys.stderr)
     if args.check:
-        print(f"{len(pieces)} {plural(len(pieces))}, {len(problems)} problems")
+        print(f"{plural(len(notes), 'note')}, {plural(len(problems), 'problem')}")
         return 1 if problems else 0
-
+    n_tests = test_count()
     INDEX.parent.mkdir(parents=True, exist_ok=True)
-    INDEX.write_text(render_index(pieces), encoding="utf-8")
-    ok = update_readme(render_readme_block(pieces))
-
-    print(f"Wrote docs/INDEX.md with {len(pieces)} {plural(len(pieces))}.")
-    if not ok:
-        print("README index markers not found, README left alone.", file=sys.stderr)
-    if problems:
-        print(f"{len(problems)} frontmatter problems above. Fix them.", file=sys.stderr)
+    INDEX.write_text(render_index(notes, logs, n_tests), encoding="utf-8")
+    text = README.read_text(encoding="utf-8")
+    if START in text and END in text:
+        block = render_readme_block(notes, n_tests)
+        README.write_text(re.sub(re.escape(START) + r".*?" + re.escape(END), lambda _: block, text, flags=re.S),
+                          encoding="utf-8")
+    print(f"Index rebuilt: {plural(len(notes), 'note')}, {plural(len(logs), 'log')}, {plural(n_tests, 'test')}.")
     return 0
 
 

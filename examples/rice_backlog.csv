@@ -1,0 +1,8 @@
+name,reach,impact,confidence,effort
+Saved filters on the reports page,4000,1,80,2
+Bulk export to Excel,1200,2,90,1
+Slack alerts when a metric moves,2500,2,50,3
+Onboarding checklist for new workspaces,900,3,60,2
+Dark mode,6000,0.25,90,1.5
+Scheduled PDF reports,1500,2,70,4
+SSO for enterprise accounts,300,3,95,5

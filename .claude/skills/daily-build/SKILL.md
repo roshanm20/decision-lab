@@ -1,203 +1,118 @@
 ---
 name: daily-build
-description: Produce and commit one day's piece for this repo, on the track the rotation picks, starting from a live web search for what is actually new. Use when the daily scheduled workflow runs, or when Roshan asks for today's piece by hand.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
+description: Build and commit one day's work for this repo from ROADMAP.md, with tests, docs, an independent review and a guaranteed commit. Use when the daily scheduled workflow runs, or when Roshan asks for today's build by hand.
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, Task
 ---
 
 # Daily build
 
-Produce exactly one piece and commit it. Follow these steps in order.
+One day, one commit, and it must be work Roshan could defend in an interview. Follow the steps in order.
 
 ## 1. Load the rules
 
-Read `STANDARDS.md` in full. Read `CLAUDE.md`. The line that governs everything: every piece has to be defensible by Roshan in an interview, without notes. Write for that reader.
+Read `CLAUDE.md` and `STANDARDS.md` in full. They are binding. Keep the goal in mind the whole time: tools practitioners would actually use, done properly, over anything that just adds volume.
 
-## 2. Get today's brief
+## 2. Get the brief
 
 ```bash
 python scripts/pick_track.py
 ```
 
-Exit codes:
+- Exit **3**: today already landed. Stop. Commit nothing.
+- Exit **4**: today's roadmap section has no ready item. Add three good items to that section of `ROADMAP.md` in the exact item format, each grounded in something you found and can link, then build the first.
+- Exit **0**: carry on with the brief. It gives `day_type`, the roadmap `item`, the persona's existing tools with the limitations their docs admit, and the `commit_trailer`.
 
-- **0**: carry on.
-- **3**: today's piece already exists. Stop. Commit nothing. Say so and finish.
-- **4**: a backlog-only track has an empty backlog. Propose three topics that meet the standards, append them under that heading marked `(auto)`, then use the first.
+## 3. Do the day's work
 
-## 3. Discovery, when the brief says `"discovery": true`
+### build, Monday to Friday
 
-Most days start here, not with a topic. The brief's `search_for` field says where to look.
+The brief's `item` is either `extend` (improve an existing tool) or `new` (add a tool).
 
-Search properly. Several searches, not one. You are looking for something that moved recently and that a builder would care about, not for a topic to summarise. Good signals:
+First, spend a few minutes on discovery for the persona. Search for what practitioners in that role are actually struggling with this week: forum threads, practitioner blogs, product changelogs, questions on analytics and marketing communities. Append three findings to `discovery/<YYYY-MM>.md` under a `## <date>` heading, each one line with a link and a verdict: `BUILT`, `QUEUED` or `IGNORED, <reason>`. Rejected findings stay in the log. If a finding sharpens today's item, use it. Anything worth building later becomes a `QUEUED` finding, and Sunday turns those into roadmap items.
 
-- Someone describing a problem they have, in public, in the last two weeks.
-- A pricing page or changelog that changed.
-- A dataset or API that just became available.
-- A claim that looks wrong and can be checked.
+**For an `extend` item:**
+1. Read the tool's module, its tests, and its docs page.
+2. Make the change. Keep the tool's interface and its existing behaviour unless the item says otherwise.
+3. Add tests for the new behaviour, including at least one checked against a number you worked out independently, and one for a bad input.
+4. Update the docs page: new usage, a fresh example with real output, and remove the fixed limitation from `## What it does not do`. Add any new limitation you now know about.
+5. Add a dated entry to `tools/CHANGELOG.md`.
 
-Bad signals: a funding round with no product detail, a vendor blog post about its own excellence, a paper with no buildable idea in it.
+**For a `new` item:**
+1. Copy the structure of an existing tool in the same persona or the closest one: a module docstring that names the mistake the tool fixes, a `TOOL` dict, `add_arguments(parser)`, `run(args)`, and pure functions that the tests can call directly.
+2. Standard library only unless there is a real reason. Say the reason in the docs if so.
+3. Register it in `decisionlab/registry.py`.
+4. Write `tests/test_<module>.py`: the core calculation checked against an independently worked value, edge cases, and bad inputs refused with clear messages.
+5. If it needs example input, add it to `examples/` and label it illustrative in the file and on the docs page.
+6. Write `docs/tools/<name>.md` in the same shape as the existing pages. Paste real output from a real run. End with `## What it does not do`.
+7. Add a dated entry to `tools/CHANGELOG.md`.
 
-Then append to the discovery log at the path the brief gives, creating the file with a `# Discovery log, <Month YYYY>` heading if it does not exist:
+Then run the tool the way a user would, from the command line, on the example and on at least one awkward input. Fix anything that reads badly.
 
-```
-## 2026-09-21
-- <finding, one line> . <link> . BUILT
-- <finding, one line> . <link> . QUEUED, added to BACKLOG under metric
-- <finding, one line> . <link> . IGNORED, the claim did not survive a check
-```
+Every `$ python -m decisionlab ...` block on a docs page must be a plain command, no pipes or redirects, whose output is the same on every run. After any change to a tool or its docs page, run `python scripts/refresh_docs.py` so every pasted output on the docs pages is regenerated from a real run, then read the diff. If an output changed in a way you did not intend, that is a bug to fix, not a docs update. `scripts/check.py` fails if any pasted output is stale.
 
-Log three to five findings every discovery day, including the ones you did not use. The rejected ones are part of the record.
+### note, Saturday
 
-Pick one finding and build the day's piece on it. If the search genuinely turns up nothing worth building on, say so in the log, then fall back to `backlog_fallback_topic` from the brief. Falling back is allowed. Pretending a weak finding is interesting is not.
+Take the brief's item from the `notes` section. The best note runs one of this repo's tools on real, sourced public data.
 
-## 4. Research the thing you picked
+- Research primary sources: filings, official statistics, company pricing pages, the actual dataset. Follow a news article back to what it cites.
+- Every number gets its source and the date checked. If you cannot source what the note needs, switch to the next notes item. If none can be sourced, fall back as in step 6.
+- If a tool is used, commit its input file next to the note and paste the real output.
+- Frontmatter as in `STANDARDS.md`. End with `## What would change my mind` and `## Sources`.
 
-- Primary sources. Pricing pages, filings, official statistics, the actual repository, the actual dataset. A news article citing a number is worse than the source it cites, so follow it back.
-- Every figure gets its source and the date you checked it.
-- If you cannot source what the piece needs, **stop and write nothing.** Say what you could not source. A missing day is acceptable. A day of unsourced assertions is not.
+### decision-record, Thursday when journal/inbox has a note
 
-Do not lift sentences from sources. Read, then write in your own words.
+Build the record from the note in the brief, using **only what the note says**. You know nothing about Roshan's companies beyond that file. No web searching them, no filling gaps by inference.
 
-Never write about Roshan's own companies or projects from anything except a journal note. Not from the web, not from this repo's README, not from inference. If a piece would benefit from a CompEdge example, leave it out and say so in the commit message.
+Structure: `## The decision`, `## What I knew at the time`, `## Options`, `## What I picked and why`, `## What happened`, `## What I would do differently`, `## Open questions on my own note`. The last section lists every gap in the note as a question. The journal folder is public, so the note itself is already visible. If it still contains something that looks like it should not be public, such as a client name or exact revenue, leave that out of the record and say so in the commit message so Roshan can remove it from the note too.
 
-## 5. Build or write
-
-Write to the directory the brief gives, named `YYYY-MM-DD-slug.md`, with the frontmatter block from `STANDARDS.md`: `title`, `date`, `track`, `summary`, `sources`.
-
-Every piece ends with:
-
-```
-## What would change my mind
-
-## Sources
-```
-
-Sources numbered, each with a link and the date checked.
-
-Style, and this is checked:
-
-- Plain Indian English. Short sentences. The way a person writes.
-- **No em dashes anywhere.** Use a comma, a full stop, "and", or "but".
-- No filler opening. Start on the substance.
-- No consulting or AI vocabulary. Not "leverage", not "landscape", not "robust framework", not "in an era of".
-- Active voice.
-- Eight hundred to fifteen hundred words for a note, two hundred to five hundred for a metric. Do not pad.
-
-Then meet the brief's `extra_requirement`. If it says run the tool and paste the output, run it with Bash and paste what it actually printed.
-
-## Build day, Saturdays
-
-The brief carries `existing_tools` and `prefer_extending`.
-
-When `prefer_extending` is true, improving an existing tool is the default and starting a new one needs a reason you state in the commit message. Forty one-off scripts are worth less than six tools that got better.
-
-To extend a tool: read it and its note, pick a limitation the note already admits to under "What it does not do", fix that, run the tool to prove it works, update the note's limitation list, and add a line to `tools/CHANGELOG.md`. The day's markdown file then describes what changed and why, and it can be short.
-
-To write a new tool: under three hundred lines, runs on its own, no dependencies beyond pandas, numpy, matplotlib and the standard library unless you commit a requirements file. Standard library only is better. Add its first entry to `tools/CHANGELOG.md`.
-
-Either way you must actually run it. Never paste an output you did not see.
-
-## Decision record track, Thursdays
-
-The brief will have `"source": "journal"` and a `note_to_use` path. Read that note and build the record from it.
-
-The rule that overrides everything here: **use only what the note says.** You know nothing about CompEdge, Nayrix, Dharti or any of Roshan's projects beyond what is in that file. Do not search for his companies. Do not reason your way to a plausible detail. Do not smooth over a gap.
-
-Where the note is thin, put the question in the record:
-
-```
-## Open questions on my own note
-
-- The note says pricing moved but not by how much. What were the two numbers?
-- Nothing on what churn did in the three months after. Did it move?
-```
-
-That section is a feature. It shows the record came from a real note, and it gives Roshan a list to fill in.
-
-Confidentiality: if the note has a line starting `CONFIDENTIAL:` or a "Cannot go public" section, nothing in there reaches the record. Use a ratio, a range or a description, and say the exact figure is not public.
-
-Structure:
-
-```
-## The decision
-## What I knew at the time
-## Options
-## What I picked and why
-## What happened
-## What I would do differently
-## Open questions on my own note
-```
-
-Then move the note:
+Write it to `content/decisions/<date>-<slug>.md` with `track: decision-record`, then:
 
 ```bash
 git mv journal/inbox/<note>.md journal/used/<note>.md
 ```
 
-If the brief says `"source": "backlog"` instead, the inbox was empty. Write an outside case note into `content/cases` and do not touch the journal folders.
+### release, Sunday
 
-## Weekly review track, Sundays
+1. Run `python scripts/check.py`. If anything fails, fixing it is today's work.
+2. Write `weekly/<date>-week-log.md` with `track: weekly-log`. List any decision record by linking to its file in `content/decisions/`, not by retyping its title. Then a factual list of the week's commits (`git log --since="7 days ago" --format="%ad %s" --date=short`), which tools were added or extended, the test count now against a week ago, and how many discovery findings were logged. Facts only, no opinions and no placeholders.
+3. Groom `ROADMAP.md`: tick anything finished, turn this week's `QUEUED` discovery findings into items (each with a why and a done-when), split anything too big for one day, and keep at least five ready items in every section. Order each section by value to a practitioner.
+4. If a tool was added or extended this week, bump the version in both `pyproject.toml` and `decisionlab/__init__.py` (new tool or option: minor, fix only: patch) and add a section to `CHANGELOG.md` in the same style as the ones already there. The workflow turns that section into a GitHub release.
 
-Do not write opinions. Prepare a draft only:
+## 4. Independent review, before any commit
 
-1. List every piece committed in the last seven days with its track, title and one line summary. `git log --since="7 days ago" --name-only --pretty=format:` gives the files.
-2. Write a "Questions for me" section, three to five specific questions about the actual claims made that week. Not generic ones.
-3. Leave this block unfilled at the end:
+Use the Task tool to start a reviewer agent that did not see you write the change. Give it this brief, filled in:
 
-```
-## My read
+> You are reviewing a change to a public repo that will be read by recruiters and interview panels. Read STANDARDS.md in full. Then review every file listed in `git status --porcelain` and `git diff`. Check: (1) run `python scripts/check.py` and report its result; (2) for any tool changed, run the command shown on its docs page and confirm the pasted output matches what it prints now; (3) confirm at least one test checks a number worked out independently rather than copied from the code's own output; (4) for any note, open at least two cited sources with WebFetch and confirm they say what the note claims; (5) look for claims stated as fact without a source, invented example data presented as real, placeholders, filler, and any mention of Roshan's own companies outside journal-derived files. Reply with PASS, or with a numbered list of specific problems and the file and line for each.
 
-_Not yet written._
-```
+Fix everything it lists and review once more. If it still does not pass after two rounds, drop down the ladder in step 6 instead of committing weak work.
 
-Roshan writes that by hand. Never fill it, and never edit a weekly file where that section already has content.
-
-## 6. Self check
-
-Every answer must be yes, or fix it, or abandon the piece.
-
-- A real decision or problem at the centre, not a topic summary?
-- Every number sourced, or labelled an estimate with the assumption stated?
-- A clear position, rather than hedging both ways?
-- Is "What would change my mind" specific?
-- Does the piece leave behind something reusable?
-- Any em dashes? Search the file and remove them.
-- Could Roshan defend every sentence in an interview?
-- Does this repeat an existing piece? Check the track directory and `grep` titles in `docs/INDEX.md`.
-- On a discovery day, is the discovery log updated, including the findings you rejected?
-
-## 7. Tick, rebuild, commit
-
-Tick the backlog item if you used one. Append two or three new topics marked `(auto)` if the track is down to three or fewer.
+## 5. Commit
 
 ```bash
-python scripts/build_index.py
+python scripts/commit_day.py --item <ID> -m "<day type>: <what this does>"
 ```
 
-Fix any frontmatter problems it reports in today's file.
+For example `--item BI-02 -m "build: funnel tool with step intervals"`. Pass `--item` with the ID of the one roadmap item this commit actually finishes, nothing else. The script ticks it in `ROADMAP.md` in the same commit and records it in a `Roadmap-Item` trailer, which is how the picker knows never to build it again. A commit that finishes no roadmap item, such as Sunday's release or a fallback-ladder fix, has no `--item`.
 
-**The commit author matters more than anything else in this file.** The action
-sets git's user to `claude[bot]` before you run, and a commit authored by the bot
-does not appear on Roshan's contribution graph, which makes the whole repo
-invisible on his profile. So always pass the author explicitly:
+Commit messages are public. Never name Roshan's companies in one, and the script refuses if you do. A decision record's message describes it instead, for example `decision-record: pricing tiers, from a journal note`.
 
-```bash
-git add -A
-git commit --author="Muhammed Roshan M <muhammedroshanmangat@gmail.com>" \
-  -m "<track>: <short description>"
-git push
-```
+The script rebuilds the index, runs every check, commits as Muhammed Roshan M with the day's `Daily-Build` trailer, and confirms the author. If it refuses, fix what it reports and run it again.
 
-The committer stays `claude[bot]`, which is honest and correct, since the bot did
-commit it. GitHub counts the author, so this is what makes it count for Roshan.
+**Do not push.** `git push` is blocked for you. The workflow checks again with its own copy of the checks and pushes.
 
-After pushing, check it worked:
+**Do not edit Roshan's control files**: `CLAUDE.md`, `STANDARDS.md`, `docs/setup.md`, anything in `.github/` or `.claude/`, `scripts/check.py`, `scripts/commit_day.py`, `scripts/daylog.py`, `scripts/should_run_now.py`, `scripts/profile_section.py`, `scripts/refresh_docs.py`, `scripts/build_index.py`, and the README outside its generated block. The workflow refuses to push a run that touches any of them, and the whole day is lost. If one of them seems wrong, say so in the weekly log instead.
 
-```bash
-git log -1 --pretty=format:'%an <%ae>'
-```
+## 6. If the planned work cannot meet the bar
 
-That must print `Muhammed Roshan M <muhammedroshanmangat@gmail.com>`. If it does
-not, fix it with `git commit --amend --author=...` and force push.
+A day always ends with a commit, and it is never filler. Go down this ladder until something passes review and the checks:
 
-One commit. Do not split it to make the history look busier.
+1. The next ready item in the same roadmap section.
+2. A small `extend` on any tool: fix one limitation listed in its docs page, with tests.
+3. Tests for an edge case some tool does not cover yet, plus a fix if the test finds a bug.
+4. Grooming `ROADMAP.md` with this week's discovery findings, every new item carrying its source link.
+
+Whichever rung you land on, the commit message says what was actually done.
+
+## Style, checked by scripts/check.py
+
+Plain Indian English, short sentences, active voice. No em dashes or en dashes anywhere, in code comments too. No filler openings, no consulting or AI vocabulary.

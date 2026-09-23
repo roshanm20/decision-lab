@@ -25,7 +25,7 @@ Cover these, roughly:
 
 Numbers matter more than adjectives. "Pricing went from X to Y and conversion did Z" is worth more than "pricing was a challenge". If I cannot share a real number publicly, say so in the note and the record will use a ratio or a range instead.
 
-If a note contains something confidential, say so at the top with a line starting `CONFIDENTIAL:` and name what cannot go public. The run will work around it rather than publishing it.
+**This folder is public.** The repo is public, so a note is readable by anyone the moment it is pushed, before any record is built from it. Never put a client name, exact revenue, or anything else confidential in a note. Where a number cannot be public, write a range or a ratio instead, like "revenue roughly tripled" or "somewhere between 20 and 50 paying users".
 
 ## Files starting with an underscore are ignored
 

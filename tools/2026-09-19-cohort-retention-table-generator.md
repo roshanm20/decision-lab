@@ -25,7 +25,7 @@ It expects `customer_id`, `order_date`, and optionally `revenue`. Use `--id-col`
 
 ## What the output looks like
 
-This is the real output of `--demo`, which generates synthetic data where each cohort retains slightly worse than the one before it. That is the pattern you usually get when acquisition spend is being scaled up.
+This is the real output of `--demo`, which generates synthetic data where each cohort retains slightly worse than the one before it. I picked that shape so the blank cells on the right are easy to see. It is an assumption of the demo, not a claim about how real businesses behave.
 
 ```
 1,944 transactions, 1,340 customers, 12 monthly cohorts, data runs to 2026-02
@@ -70,7 +70,7 @@ Look at the staircase on the right. That is the honest shape of a cohort table. 
 
 ## What would change my mind
 
-The design choice I am least sure about is the weighted average. Weighting by cohort size means the big cohorts decide the shape, and big cohorts are usually the ones from heavy acquisition months, which retain worse. So the average row may sit below the typical cohort.
+The design choice I am least sure about is the weighted average. Weighting by cohort size means the big cohorts decide the shape. If the big cohorts are the ones that retain worse, the average row will sit below the typical cohort and make things look worse than they are. In this demo that does not happen. Month one's size-weighted average is about 31 percent, and the plain average of the twelve cohorts is 31.25 percent, so weighting by size barely moves it, because cohort size and retention are not linked in the synthetic data. With real data, compare the weighted and plain averages before trusting the average row. A big gap between them means size and retention are linked.
 
 If someone showed me that they were making decisions off the average row rather than reading the cohorts individually, I would remove the average row instead of trying to improve it. A single number on a cohort table invites exactly the shortcut the table exists to prevent.
 

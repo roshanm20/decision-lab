@@ -44,6 +44,8 @@ High-stickiness product (daily habit app)  (daily activity probability = 30%)
 
 The pattern that matters for a manager: the overstatement gets worse as the product gets stickier, not better. A team that ships a feature that genuinely improves retention will watch its "monthly users" figure, summed the wrong way, inflate even further past reality, at the exact moment the real number might be flat or even down because acquisition slowed. The metric moves in the opposite direction of the truth.
 
+One caution on the size of these numbers. The 800 percent comes from a simulation where I chose the return rates, so it proves the direction and the mechanism, not how large the error is in any real product. The sources below confirm the mechanism. The real overstatement for a given product depends on how often its users actually come back, and you would measure that from your own event data before quoting a figure.
+
 **Second, it reproduces the channel version of the same bug**, the one in the Adobe thread. One pool of users, each active day they pick a channel for that session, paid, organic or direct, the way a real visitor might arrive on a paid ad one day and come back organically a few days later. Summing the three channels' unique-user counts against the true total distinct count, from the same run:
 
 ```

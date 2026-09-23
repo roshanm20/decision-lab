@@ -1,5 +1,9 @@
 # Tools
 
-Small things that run. Under three hundred lines each, no hidden dependencies, and each one prints something useful when you run it.
+The tools now live in the `decisionlab` package and run through one command:
 
-Every tool has a note next to it saying what it is for, how to run it, and what the output looked like when it was tested.
+```bash
+python -m decisionlab list
+```
+
+Each tool has a page in [`docs/tools`](../docs/tools). This folder keeps the original write-up of the first tool and a small script so older commands still work. [`CHANGELOG.md`](CHANGELOG.md) is the tool-by-tool history.

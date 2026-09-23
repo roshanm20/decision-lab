@@ -1,12 +1,25 @@
 __pycache__/
 *.pyc
+.pytest_cache/
 .venv/
 venv/
+build/
+dist/
+*.egg-info/
+_site/
 .DS_Store
 .ipynb_checkpoints/
-*.egg-info/
 .env
 
-# test artefacts from running the tools
+# temp files the workflows write while running
+notes.md
+body.md
+profile/
+
+# demo output, the tools write these to a temp folder now, this is a backstop
 demo_transactions.csv
 *.demo.csv
+
+# local settings a tool may write, never part of the repo
+.claude/settings.local.json
+.claude/*.local.*

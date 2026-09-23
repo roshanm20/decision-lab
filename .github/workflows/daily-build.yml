@@ -1,8 +1,12 @@
 name: Daily build
 
-# Scheduled in six windows a day. A gate step works out which one is today's,
-# deterministically from the date, so the commit lands at a different time each
-# day and never twice. See scripts/should_run_now.py.
+# Eight windows a day, in UTC. scripts/should_run_now.py picks one of the
+# first six as today's, from a hash of the date, so the commit lands at a
+# different time each day. Every later window runs only if today's commit has
+# not landed yet, so a dropped, delayed or failed run gets picked up the same
+# day. A day that has landed is never built twice, and after three failed
+# attempts in a day the rest are skipped so a repeating fault cannot burn the
+# Claude plan. The last window opens an issue if the day ends with nothing.
 on:
   schedule:
     - cron: "17 1 * * *"
@@ -11,11 +15,14 @@ on:
     - cron: "17 10 * * *"
     - cron: "17 13 * * *"
     - cron: "17 16 * * *"
+    - cron: "17 19 * * *"
+    - cron: "17 22 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
   issues: write
+  actions: read
   id-token: write
 
 concurrency:
@@ -25,13 +32,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Allows for the random wait of up to 45 minutes plus the build itself.
-    timeout-minutes: 90
+    timeout-minutes: 170
 
     steps:
-      - name: Check out the repo
+      - name: Check out the live main branch
         uses: actions/checkout@v6
         with:
+          # Not the commit the trigger fired on: a queued run must see what an
+          # earlier run already pushed, or it would build the day again.
+          ref: main
           fetch-depth: 0
 
       - name: Set up Python
@@ -39,62 +48,141 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Is this today's window
+      - name: Install the test runner
+        run: python -m pip install --quiet pytest
+
+      - name: Decide whether this window builds
         id: gate
         env:
           EVENT_SCHEDULE: ${{ github.event.schedule }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python scripts/should_run_now.py --schedule "$EVENT_SCHEDULE" >> "$GITHUB_OUTPUT"
+          python scripts/should_run_now.py --schedule "$EVENT_SCHEDULE" > gate.txt
+          cat gate.txt
+          DAY=$(grep '^date=' gate.txt | cut -d= -f2)
+          echo "DAILY_DATE=$DAY" >> "$GITHUB_ENV"
+          if grep -q '^run=true' gate.txt && [ -n "$EVENT_SCHEDULE" ]; then
+            # If this lookup fails for any reason, build anyway. The budget must never block a day.
+            FAILS=$(gh run list --workflow daily-build.yml --created ">=$DAY" --limit 50 \
+              --json conclusion --jq '[.[] | select(.conclusion == "failure")] | length' 2>/dev/null || echo 0)
+            if [ "${FAILS:-0}" -ge 3 ]; then
+              echo "Three failed attempts already today, skipping to protect the Claude plan."
+              sed -i 's/^run=true/run=false/' gate.txt
+            fi
+          fi
+          cat gate.txt >> "$GITHUB_OUTPUT"
+          rm gate.txt
 
-      - name: Wait for the chosen minute
+      - name: Wait for today's minute
         if: steps.gate.outputs.run == 'true' && steps.gate.outputs.sleep_seconds != '0'
-        run: |
-          echo "Waiting ${{ steps.gate.outputs.sleep_seconds }}s, landing around ${{ steps.gate.outputs.window_ist }} IST."
-          sleep "${{ steps.gate.outputs.sleep_seconds }}"
+        run: sleep "${{ steps.gate.outputs.sleep_seconds }}"
 
-      - name: Set the commit identity
+      - name: Record where we started
+        id: start
         if: steps.gate.outputs.run == 'true'
-        # This is what makes the commits count on Roshan's contribution graph.
-        # The email has to be one that is verified on his GitHub account.
         run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "DAILY_START=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          # A copy of the checks as they were before the run, so the run cannot weaken them.
+          cp scripts/check.py "$RUNNER_TEMP/check.py"
           git config user.name "Muhammed Roshan M"
           git config user.email "muhammedroshanmangat@gmail.com"
 
-      - name: Run the daily build
+      - name: Build today's work
+        id: claude
         if: steps.gate.outputs.run == 'true'
+        continue-on-error: true
+        # Shorter than the job, so a slow run still leaves time to push a finished commit.
+        timeout-minutes: 100
         uses: anthropics/claude-code-action@v1
         with:
-          # Generated once with: claude setup-token
-          # Runs on the Claude subscription. No API key, no metered billing.
+          # Generated once with `claude setup-token`. Runs on the Claude subscription.
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: "/daily-build"
-          # Temporary, so failures are readable in the run log. Turn this off
-          # once the daily run is known good, since this repo is public.
-          show_full_output: true
           claude_args: |
-            --max-turns 80
-            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch"
-          # To pin a model, add a --model line above, for example:
-          #   --model claude-opus-5
-          # Left out on purpose so the action uses its current default and the
-          # run cannot fail on a model name that has been retired.
+            --max-turns 150
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch,Task"
+            --disallowedTools "Bash(git push:*)"
 
-      - name: Report what landed
+      - name: Check again and push
+        id: push
+        if: steps.gate.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          START: ${{ steps.start.outputs.sha }}
+        run: |
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          # Anything the run left uncommitted is not part of the day's work.
+          git stash push --include-untracked --quiet || true
+          if [ "$(git rev-parse HEAD)" = "$START" ]; then
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::This run produced no commit. The next window will try again."
+            exit 1
+          fi
+          if ! python "$RUNNER_TEMP/check.py" --root . --base "$START"; then
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Checks failed on the new commit, so it was not pushed. The next window will try again."
+            exit 1
+          fi
+          BAD=$(git log --format='%ae' "$START"..HEAD | grep -v -x 'muhammedroshanmangat@gmail.com' || true)
+          if [ -n "$BAD" ]; then
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "::error::A new commit is not authored by Roshan's verified email, so it would not count on his graph. Not pushed."
+            exit 1
+          fi
+          git fetch --quiet "$REMOTE" main
+          if [ "$(python scripts/daylog.py --ref FETCH_HEAD)" = "landed" ]; then
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "Another run already landed today while this one was building. Dropping this run's commit."
+            exit 0
+          fi
+          git rebase --quiet FETCH_HEAD
+          git push "$REMOTE" HEAD:main
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Release the current version if it has no release yet
+        if: steps.push.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(python -c "import decisionlab; print(decisionlab.__version__)")
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "v$VERSION is already released."
+          elif python scripts/release_notes.py "$VERSION" > "$RUNNER_TEMP/notes.md"; then
+            gh release create "v$VERSION" --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md" --target main
+          else
+            echo "CHANGELOG.md has no section for $VERSION yet, no release."
+          fi
+
+      - name: Report
         if: always() && steps.gate.outputs.run == 'true'
         run: |
           {
-            echo "### Window"
-            echo "Landed around ${{ steps.gate.outputs.window_ist }} IST."
+            echo "### Daily build for $DAILY_DATE"
+            echo "Window lands around ${{ steps.gate.outputs.window_ist }} IST. Catch-up run: ${{ steps.gate.outputs.catchup }}."
+            echo "Claude step: ${{ steps.claude.outcome }}. Pushed: ${{ steps.push.outputs.pushed }}."
             echo ""
-            echo "### Last commit"
-            git log -1 --pretty=format:'%h %an %s'
-            echo ""
-            echo ""
-            echo "### Index check"
-            python scripts/build_index.py --check 2>&1 || true
+            echo '```'
+            git log -3 --format='%h %an <%ae> %s'
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Alert if the day ends with nothing
+        if: always() && steps.gate.outputs.last_window == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --quiet origin main
+          if [ "$(python scripts/daylog.py --ref origin/main)" = "landed" ]; then
+            echo "Today landed."
+            exit 0
+          fi
+          TITLE="No daily commit landed on $DAILY_DATE"
+          if gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number' | grep -q .; then
+            exit 0
+          fi
+          gh issue create --title "$TITLE" --body "Every window ran or was skipped and nothing landed. Run logs: https://github.com/${GITHUB_REPOSITORY}/actions/workflows/daily-build.yml . The most common cause is an expired Claude token: run \`claude setup-token\` on your laptop and update the CLAUDE_CODE_OAUTH_TOKEN secret. The next most common is a usage limit on the Claude plan, which clears on its own."
 
       - name: Note a skipped window
         if: steps.gate.outputs.run != 'true'
-        run: |
-          echo "Not today's window. Today's run is at ${{ steps.gate.outputs.window_ist }} IST." >> "$GITHUB_STEP_SUMMARY"
+        run: echo "Skipped. Today's window lands around ${{ steps.gate.outputs.window_ist }} IST, or today already landed." >> "$GITHUB_STEP_SUMMARY"

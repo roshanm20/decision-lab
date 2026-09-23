@@ -26,6 +26,4 @@ Guessing:
 
 ## What I would do differently
 
-## Cannot go public
-
-<Anything here stays out of the published record. Delete the section if nothing applies.>
+<This folder is public. Use ranges or ratios for anything that cannot be public, never exact confidential figures or client names.>

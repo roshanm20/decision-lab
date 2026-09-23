@@ -1,0 +1,11 @@
+title: Decision Lab
+description: Small, tested tools for consultants, BI analysts, marketers and product managers.
+theme: jekyll-theme-minimal
+exclude:
+  - .claude
+  - journal
+  - scripts
+  - tests
+  - decisionlab
+  - pyproject.toml
+  - CLAUDE.md
