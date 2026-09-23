@@ -14,6 +14,7 @@ TOOL_MODULES = [
     "decisionlab.consulting.market_sizing",
     "decisionlab.bi.cohort",
     "decisionlab.marketing.ab_test",
+    "decisionlab.marketing.srm",
     "decisionlab.product.rice",
 ]
 

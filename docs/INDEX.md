@@ -1,6 +1,6 @@
 # Index
 
-4 tools, 60 tests, 3 notes.
+5 tools, 85 tests, 3 notes.
 
 ## Tools
 
@@ -15,6 +15,7 @@
 **For marketers**
 
 - [`ab-test`](../docs/tools/ab-test.md) Sample size before a test, significance after it, and a plain answer on whether a flat result was just underpowered.
+- [`srm`](../docs/tools/srm.md) Checks whether an experiment's traffic actually landed in the split you configured, before you trust anything else it reports.
 
 **For product managers**
 

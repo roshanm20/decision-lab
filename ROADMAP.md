@@ -82,7 +82,7 @@ The order inside a section is the priority. Extending a tool that people already
 
 ## marketing
 
-- [ ] MK-01 | new | srm: sample ratio mismatch check for experiments | S
+- [x] MK-01 | new | srm: sample ratio mismatch check for experiments | S
   - why: a 50/50 test that lands 52/48 usually means the split is broken, and every result from it is suspect.
   - done when: expected split and observed counts in, chi-square SRM check out, with a plain verdict, tests.
 - [ ] MK-02 | extend | ab-test: several variants with a Holm correction | S

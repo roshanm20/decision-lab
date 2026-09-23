@@ -21,7 +21,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 <!-- INDEX:START -->
 
-**4 tools across 4 groups, 60 tests, 3 written notes.**
+**5 tools across 4 groups, 85 tests, 3 written notes.**
 
 **For consultants**
 
@@ -34,6 +34,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 **For marketers**
 
 - [`ab-test`](docs/tools/ab-test.md) Sample size before a test, significance after it, and a plain answer on whether a flat result was just underpowered.
+- [`srm`](docs/tools/srm.md) Checks whether an experiment's traffic actually landed in the split you configured, before you trust anything else it reports.
 
 **For product managers**
 
