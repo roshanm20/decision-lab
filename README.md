@@ -65,14 +65,6 @@ I am Muhammed Roshan M. I did a BS-MS in Physics at IISER Bhopal and research at
 
 Physics taught me to be careful about what a number actually means, and most of these tools come from that habit: an estimate is a range, a flat test might just be a small test, and a cohort that has not reached month six has no month six.
 
-## How this repo is built, stated plainly
-
-A GitHub Action runs Claude Code every day against the rules in [`CLAUDE.md`](CLAUDE.md) and the bar in [`STANDARDS.md`](STANDARDS.md). It picks the next item from [`ROADMAP.md`](ROADMAP.md), builds it with tests, has a second agent review the change, and commits only if every check in [`scripts/check.py`](scripts/check.py) passes. I set the direction, curate the roadmap, and review the weekly log.
-
-I am open about this on purpose. Using a tool well and holding it to a standard it has to meet is the skill worth showing. The interesting files are the standards, the checks and the tests, not the commit count.
-
-The automation is never allowed to write about my own companies from anything except my own notes. That rule is in three files and enforced by a check that fails the commit.
-
 ## Notes
 
 Written pieces live beside the code: [BI analyses](bi/analyses), [AI product teardowns](content/teardowns), [metric definitions](bi/metric-library), [decisions from my own work](content/decisions), and [applied notes](content/notes) that run the tools on real, sourced data. Every note has sourced numbers, a stated position, and a section on what would change my mind.
