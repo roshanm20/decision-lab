@@ -13,6 +13,10 @@ that would drop are marked fragile. A roadmap
 whose top three are all fragile is a roadmap resting on guesses, and the
 team should firm those guesses up before arguing about order.
 
+The 30% shade and the two-place threshold are defaults, not fixed. Use
+--shade and --drop to change them. Reach is a guess too, often a shakier
+one than confidence, so --check-reach runs the same test against reach.
+
 CSV columns (header row required, case-insensitive):
     name, reach, impact, confidence, effort
 Confidence can be written as 80 or 0.8. Standard library only.
@@ -110,15 +114,27 @@ def rank(items: list) -> list:
     return sorted(items, key=lambda it: -it.score)
 
 
-def fragility(items: list, shade: float = SHADE, drop: int = FRAGILE_DROP) -> dict:
-    """For each item name, how many places it falls if only its confidence is shaded down."""
+def fragility(items: list, shade: float = SHADE, drop: int = FRAGILE_DROP,
+              field: str = "confidence") -> dict:
+    """For each item name, how many places it falls if only `field` is shaded down.
+
+    field is "confidence" or "reach". Both are usually guesses, so the same
+    question applies to either: does this item's rank depend on the guess
+    holding up, or would it survive being wrong.
+    """
+    if field not in ("confidence", "reach"):
+        raise ValueError(f"field must be 'confidence' or 'reach', got {field!r}")
+    if not 0 < shade < 1:
+        raise ValueError(f"shade must be between 0 and 1, got {shade!r}")
+    if drop < 1:
+        raise ValueError(f"drop must be 1 or more, got {drop!r}")
     base = [it.name for it in rank(items)]
     result = {}
     for target in items:
-        original = target.confidence
-        target.confidence = original * (1 - shade)
+        original = getattr(target, field)
+        setattr(target, field, original * (1 - shade))
         shaded = [it.name for it in rank(items)]
-        target.confidence = original
+        setattr(target, field, original)
         result[target.name] = shaded.index(target.name) - base.index(target.name)
     return {name: fell for name, fell in result.items() if fell >= drop}
 
@@ -127,30 +143,48 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("csv_path", help="CSV with name, reach, impact, confidence, effort")
     parser.add_argument("--markdown", action="store_true", help="print a markdown table to paste into docs")
     parser.add_argument("--top", type=int, default=0, help="only show the top N items")
+    parser.add_argument("--shade", type=float, default=SHADE,
+                         help=f"fraction to shade a guess down by in the fragility check (default {SHADE:g})")
+    parser.add_argument("--drop", type=int, default=FRAGILE_DROP,
+                         help=f"places an item must fall to count as fragile (default {FRAGILE_DROP})")
+    parser.add_argument("--check-reach", action="store_true",
+                         help="also run the fragility check against reach, not just confidence")
+
+
+def _fragile_line(shaky: list, k: int, shade: float, drop: int, field: str) -> str:
+    if shaky:
+        which = "this item" if len(shaky) == 1 else "any of these"
+        return (f"Fragile at the top on {field}: {', '.join(shaky)}. If the {field} guess on {which} "
+                f"were {shade * 100:.0f}% lower, it would drop {drop} or more places. Firm up "
+                f"{'that guess' if len(shaky) == 1 else 'those guesses'} before committing to the order.")
+    return f"The top {k} hold on {field} even if any single {field} guess were {shade * 100:.0f}% lower."
 
 
 def run(args: argparse.Namespace) -> int:
     items = load_items(args.csv_path)
     ordered = rank(items)
-    fragile = fragility(items)
+    fragile = fragility(items, shade=args.shade, drop=args.drop)
+    reach_fragile = fragility(items, shade=args.shade, drop=args.drop, field="reach") if args.check_reach else {}
     shown = ordered[: args.top] if args.top else ordered
     headers = ["Rank", "Item", "Reach", "Impact", "Confidence", "Effort", "RICE", "Fragile"]
-    rows = [
-        [i, it.name, f"{it.reach:,.0f}", f"{it.impact:g}", f"{it.confidence * 100:.0f}%",
-         f"{it.effort:g}", f"{it.score:,.0f}", f"falls {fragile[it.name]}" if it.name in fragile else ""]
-        for i, it in enumerate(shown, start=1)
-    ]
-    print(markdown_table(headers, rows) if args.markdown else format_table(headers, rows, left=(1, 7)))
+    if args.check_reach:
+        headers.append("Fragile (reach)")
+    rows = []
+    for i, it in enumerate(shown, start=1):
+        row = [i, it.name, f"{it.reach:,.0f}", f"{it.impact:g}", f"{it.confidence * 100:.0f}%",
+               f"{it.effort:g}", f"{it.score:,.0f}", f"falls {fragile[it.name]}" if it.name in fragile else ""]
+        if args.check_reach:
+            row.append(f"falls {reach_fragile[it.name]}" if it.name in reach_fragile else "")
+        rows.append(row)
+    left = (1, 7, 8) if args.check_reach else (1, 7)
+    print(markdown_table(headers, rows) if args.markdown else format_table(headers, rows, left=left))
     print()
     k = min(3, len(shown))
     shaky = [it.name for it in ordered[:k] if it.name in fragile]
-    if shaky:
-        which = "this item" if len(shaky) == 1 else "any of these"
-        print(f"Fragile at the top: {', '.join(shaky)}. If the confidence guess on {which} were 30% "
-              f"lower, it would drop {FRAGILE_DROP} or more places. Firm up "
-              f"{'that guess' if len(shaky) == 1 else 'those guesses'} before committing to the order.")
-    else:
-        print(f"The top {k} hold even if any single confidence guess were 30% lower.")
+    print(_fragile_line(shaky, k, args.shade, args.drop, "confidence"))
+    if args.check_reach:
+        reach_shaky = [it.name for it in ordered[:k] if it.name in reach_fragile]
+        print(_fragile_line(reach_shaky, k, args.shade, args.drop, "reach"))
     warned = [it for it in items if it.warnings]
     if warned:
         print()

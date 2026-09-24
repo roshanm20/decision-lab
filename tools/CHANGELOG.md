@@ -9,6 +9,9 @@ What changed, and the problem it fixes. One or two lines.
 
 The point of this file is to make improvement visible. A repo of forty one-off scripts is worth less than six tools that got better, but only if the getting better is legible from the outside.
 
+## 2026-09-24  rice
+`--shade` and `--drop` flags replace the fixed 30 percent shade and two-place threshold, both validated (shade between 0 and 1, drop at least 1). `--check-reach` runs the same fragility test against reach, since reach is often as much a guess as confidence. New column and message when it is used.
+
 ## 2026-09-23  srm
 First version. Chi-square sample ratio mismatch check for experiments: expected split and observed counts in, a plain verdict on whether the assignment itself looks broken out. Defaults to a 0.01 p-value threshold rather than 0.05, since this check runs on every experiment. Standard library only, including the chi-square p-value itself.
 

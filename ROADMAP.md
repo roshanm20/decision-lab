@@ -115,7 +115,7 @@ The order inside a section is the priority. Extending a tool that people already
 
 ## product
 
-- [ ] PM-01 | extend | rice: make the fragility shade and threshold flags, and test reach too | S
+- [x] PM-01 | extend | rice: make the fragility shade and threshold flags, and test reach too | S
   - why: the 30 percent shade and two-place threshold are fixed, and reach guesses are as shaky as confidence.
   - done when: `--shade` and `--drop` flags, an optional reach check, tests.
 - [ ] PM-02 | new | nps: NPS with a confidence interval and segment comparison | S

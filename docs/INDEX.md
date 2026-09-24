@@ -1,6 +1,6 @@
 # Index
 
-5 tools, 85 tests, 3 notes.
+5 tools, 98 tests, 3 notes.
 
 ## Tools
 
