@@ -1,0 +1,40 @@
+{
+  "name": "India's electric two-wheeler market, ex-showroom value, FY2024-25",
+  "unit": "INR, ex-showroom value",
+  "number_system": "indian",
+  "approaches": {
+    "top_down": [
+      {
+        "label": "Two-wheelers sold in India, FY2024-25",
+        "value": 19607332
+      },
+      {
+        "label": "Share of two-wheelers that were electric, FY2024-25",
+        "kind": "share",
+        "value": 0.058616
+      },
+      {
+        "label": "Average ex-showroom realisation per e2W unit, FY2024-25",
+        "value": 129308,
+        "low": 106500,
+        "high": 172068
+      }
+    ],
+    "bottom_up": [
+      {
+        "label": "Top 4 OEMs' e2W units sold, FY2024-25 (Ola, TVS, Bajaj, Ather)",
+        "value": 943338
+      },
+      {
+        "label": "Average ex-showroom realisation per e2W unit, FY2024-25",
+        "value": 129308,
+        "low": 106500,
+        "high": 172068
+      },
+      {
+        "label": "Gross-up for OEMs outside the top 4 (18% of e2W units)",
+        "value": 1.2183
+      }
+    ]
+  }
+}

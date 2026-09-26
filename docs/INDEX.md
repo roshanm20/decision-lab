@@ -1,6 +1,6 @@
 # Index
 
-5 tools, 98 tests, 3 notes.
+5 tools, 98 tests, 4 notes.
 
 ## Tools
 
@@ -22,6 +22,11 @@
 - [`rice`](../docs/tools/rice.md) Ranks a backlog by RICE and flags which positions depend on a confidence guess being right.
 
 ## Notes
+
+### Applied notes, the tools used on real data
+
+- **[Sizing India's electric two-wheeler market and testing the sizing tool](../content/notes/2026-09-26-india-electric-two-wheeler-market.md)** (2026-09-26)  
+  India's electric two-wheeler market was worth roughly 13,700 to 17,800 crore rupees at ex-showroom prices in FY2024-25, but the bigger finding is that this tool's top-down versus bottom-up check only catches a real error when the two chains do not share an input, and here they shared both the units and the price.
 
 ### BI analyses
 

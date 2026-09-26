@@ -150,7 +150,7 @@ The order inside a section is the priority. Extending a tool that people already
 
 Saturday is a writing day. The best notes use one of the tools above on real, sourced public data, because that shows the tool and the thinking at the same time.
 
-- [ ] NT-01 | note | Size a real Indian market with market-size, every number sourced | M
+- [x] NT-01 | note | Size a real Indian market with market-size, every number sourced | M
   - why: the tool's only example is invented. A sourced one shows it works on a real question.
   - done when: a note in `content/notes` with the JSON model committed, every input cited with a date checked, and a stated position.
 - [ ] NT-02 | note | Re-check a published A/B test case study with ab-test | M
