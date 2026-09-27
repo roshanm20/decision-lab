@@ -2,6 +2,20 @@
 
 Releases are cut on Sundays when the week changed the tools. Versions follow semantic versioning: a new tool or option is a minor bump, a fix is a patch.
 
+## 0.2.0, 2026-09-27
+
+### Added
+
+- `srm` for marketers: chi-square sample ratio mismatch check for experiments, a plain verdict on whether the assignment itself looks broken. Defaults to a 0.01 p-value threshold rather than 0.05, since this check runs on every experiment.
+
+### Changed
+
+- `rice` takes `--shade` and `--drop` flags in place of the fixed 30 percent shade and two-place threshold, and an optional `--check-reach` runs the same fragility test against reach.
+
+### Fixed
+
+- `compact()` in `decisionlab/common.py` rounded any value from 1 to 99 to a whole number, so 1.5 printed as 2. It now only rounds to a whole number above 100 or when the value already is one, so 1.5 stays 1.5.
+
 ## 0.1.0, 2026-09-23
 
 The repo became an installable toolkit.

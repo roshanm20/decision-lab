@@ -46,6 +46,9 @@ The order inside a section is the priority. Extending a tool that people already
 - [ ] BI-10 | new | report-table: turn a CSV into a clean summary table for a report | S
   - why: analysts spend time formatting numbers for decks and docs by hand.
   - done when: group-by with sum, mean or count, sensible number formatting, markdown or HTML output, tests.
+- [ ] BI-11 | new | grain-check: catch a non-additive metric being summed to a coarser grain | S
+  - why: a materialised metric view, dbt's semantic layer is one example, computes a metric like distinct users at a fixed grain, and re-aggregating it to a coarser grain by summing gives a silently wrong number, the same mistake BI-06 fixes for DAU and MAU. Found in dbt Core 2.0.1 release notes, checked 2026-09-21.
+  - done when: given a metric's aggregation type (sum, distinct-count, average) and its stored grain against a requested coarser grain, says whether summing across is safe, and refuses with a clear message when it is not, tests.
 
 ## consulting
 
@@ -85,6 +88,9 @@ The order inside a section is the priority. Extending a tool that people already
 - [x] MK-01 | new | srm: sample ratio mismatch check for experiments | S
   - why: a 50/50 test that lands 52/48 usually means the split is broken, and every result from it is suspect.
   - done when: expected split and observed counts in, chi-square SRM check out, with a plain verdict, tests.
+- [ ] MK-11 | extend | srm: check for mismatch day by day, not only at the end | M
+  - why: Optimizely's automatic SRM detection checks for imbalance daily through a running test, catching a broken split before the test ends rather than after. Today's srm tool only checks one set of final counts. Found in Optimizely's support docs, updated 2026-03-06, checked 2026-09-23.
+  - done when: srm accepts a CSV of daily per-arm counts, runs the chi-square check at each day, names the first day the imbalance becomes significant, and tests confirm it raises no false alarm on a clean daily-count series.
 - [ ] MK-02 | extend | ab-test: several variants with a Holm correction | S
   - why: testing four variants at p under 0.05 each gives a false winner far too often.
   - done when: `analyze` accepts several variants, applies Holm, and says which survive, tests.

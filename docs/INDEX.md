@@ -45,4 +45,5 @@
 
 ## Weekly logs
 
+- [Week two log, srm shipped, rice extended, tests from zero to 98](../weekly/2026-09-27-week-log.md) (2026-09-27)
 - [Week one log, repo setup plus one tool](../weekly/2026-09-20-week-review.md) (2026-09-20)
