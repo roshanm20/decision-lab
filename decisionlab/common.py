@@ -48,4 +48,6 @@ def compact(x: float, system: str = "intl") -> str:
             value = x / size
             digits = 0 if value >= 100 else 1 if value >= 10 else 2
             return f"{sign}{value:,.{digits}f}{suffix}"
-    return f"{sign}{x:,.0f}" if x >= 1 else f"{sign}{x:.3g}"
+    if x >= 100 or x == int(x):
+        return f"{sign}{x:,.0f}"
+    return f"{sign}{x:.3g}"
