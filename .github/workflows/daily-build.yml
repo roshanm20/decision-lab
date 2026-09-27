@@ -1,7 +1,7 @@
 name: Daily build
 
 # Eight windows a day, in UTC. scripts/should_run_now.py picks one of the
-# first six as today's, from a hash of the date, so the commit lands at a
+# first five as today's, from a hash of the date, so the commit lands at a
 # different time each day. Every later window runs only if today's commit has
 # not landed yet, so a dropped, delayed or failed run gets picked up the same
 # day. A day that has landed is never built twice, and after three failed
@@ -15,8 +15,8 @@ on:
     - cron: "17 10 * * *"
     - cron: "17 13 * * *"
     - cron: "17 16 * * *"
-    - cron: "17 19 * * *"
-    - cron: "17 22 * * *"
+    - cron: "17 18 * * *"
+    - cron: "17 20 * * *"
   workflow_dispatch:
 
 permissions:
@@ -44,7 +44,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -93,7 +93,7 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         continue-on-error: true
         # Shorter than the job, so a slow run still leaves time to push a finished commit.
-        timeout-minutes: 100
+        timeout-minutes: 90
         uses: anthropics/claude-code-action@v1
         with:
           # Generated once with `claude setup-token`. Runs on the Claude subscription.
@@ -101,6 +101,40 @@ jobs:
           prompt: "/daily-build"
           claude_args: |
             --max-turns 150
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch,Task"
+            --disallowedTools "Bash(git push:*)"
+
+      - name: Did the first pass commit
+        id: first
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          if [ "$(git rev-parse HEAD)" = "${{ steps.start.outputs.sha }}" ]; then
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::The first pass ended without a commit. Starting a second pass to finish the day."
+          else
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # On 25, 26 and 27 Sep the first pass ended as "success" after 38 to 75
+      # turns without ever committing. This pass picks up the work in the tree
+      # and must end in a commit, going down the fallback ladder if it has to.
+      - name: Finish the day
+        id: finish
+        if: steps.gate.outputs.run == 'true' && steps.first.outputs.committed == 'false'
+        continue-on-error: true
+        timeout-minutes: 50
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            An earlier pass of today's daily build ended without a commit. Some of the work may already be in the working tree.
+            1. Run `git status` and `python scripts/pick_track.py`. If pick_track exits 3, stop.
+            2. Read .claude/skills/daily-build/SKILL.md, CLAUDE.md and STANDARDS.md.
+            3. Finish today's work from where it stands. If it cannot pass review and `python scripts/check.py`, go down the ladder in step 6 of the skill. A small honest commit is fine. Filler is not.
+            4. Commit with `python scripts/commit_day.py`, as the skill says. Do not push.
+            Do not end this session without a commit made by scripts/commit_day.py, unless pick_track exited 3.
+          claude_args: |
+            --max-turns 100
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch,Task"
             --disallowedTools "Bash(git push:*)"
 
