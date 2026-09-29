@@ -1,0 +1,38 @@
+{
+  "name": "Billing software for small restaurants, one customer (illustrative numbers)",
+  "unit": "INR",
+  "number_system": "indian",
+  "horizon_months": 36,
+  "inputs": {
+    "arpu": {
+      "label": "Revenue per customer per month",
+      "value": 1500,
+      "low": 1200,
+      "high": 1800
+    },
+    "gross_margin": {
+      "label": "Gross margin",
+      "value": 0.75,
+      "low": 0.65,
+      "high": 0.82
+    },
+    "variable_cost": {
+      "label": "Support and payment cost per customer per month",
+      "value": 150,
+      "low": 100,
+      "high": 250
+    },
+    "monthly_churn": {
+      "label": "Monthly churn",
+      "value": 0.04,
+      "low": 0.02,
+      "high": 0.07
+    },
+    "cac": {
+      "label": "Cost to acquire one customer",
+      "value": 12000,
+      "low": 8000,
+      "high": 20000
+    }
+  }
+}

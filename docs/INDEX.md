@@ -1,12 +1,13 @@
 # Index
 
-5 tools, 98 tests, 4 notes.
+6 tools, 127 tests, 4 notes.
 
 ## Tools
 
 **For consultants**
 
 - [`market-size`](../docs/tools/market-size.md) Top-down and bottom-up sizing that checks the two agree, ranks the assumptions that matter, and gives a P10 to P90 range.
+- [`unit-economics`](../docs/tools/unit-economics.md) CAC, contribution, LTV and payback per customer, with payback that allows for churn and a ranking of which input moves LTV / CAC most.
 
 **For BI and analytics**
 

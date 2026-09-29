@@ -12,6 +12,7 @@ import importlib
 
 TOOL_MODULES = [
     "decisionlab.consulting.market_sizing",
+    "decisionlab.consulting.unit_economics",
     "decisionlab.bi.cohort",
     "decisionlab.marketing.ab_test",
     "decisionlab.marketing.srm",

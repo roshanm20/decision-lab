@@ -9,6 +9,9 @@ What changed, and the problem it fixes. One or two lines.
 
 The point of this file is to make improvement visible. A repo of forty one-off scripts is worth less than six tools that got better, but only if the getting better is legible from the outside.
 
+## 2026-09-29  unit-economics
+First version. CAC, contribution, LTV and payback per customer from a JSON model with low and high values. Payback allows for churn instead of dividing CAC by contribution, LTV can be capped at a horizon, and a sensitivity table ranks inputs by swing in LTV / CAC. An "everything goes wrong at once" row covers the combined case that one-at-a-time testing misses. Standard library only.
+
 ## 2026-09-24  rice
 `--shade` and `--drop` flags replace the fixed 30 percent shade and two-place threshold, both validated (shade between 0 and 1, drop at least 1). `--check-reach` runs the same fragility test against reach, since reach is often as much a guess as confidence. New column and message when it is used.
 

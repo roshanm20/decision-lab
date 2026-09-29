@@ -21,11 +21,12 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 <!-- INDEX:START -->
 
-**5 tools across 4 groups, 98 tests, 4 written notes.**
+**6 tools across 4 groups, 127 tests, 4 written notes.**
 
 **For consultants**
 
 - [`market-size`](docs/tools/market-size.md) Top-down and bottom-up sizing that checks the two agree, ranks the assumptions that matter, and gives a P10 to P90 range.
+- [`unit-economics`](docs/tools/unit-economics.md) CAC, contribution, LTV and payback per customer, with payback that allows for churn and a ranking of which input moves LTV / CAC most.
 
 **For BI and analytics**
 
