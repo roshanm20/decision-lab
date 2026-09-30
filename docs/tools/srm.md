@@ -2,7 +2,7 @@
 
 **For:** anyone reading the results of an A/B test, before trusting anything else it says.
 
-**Command:** `python -m decisionlab srm --arm NAME WEIGHT COUNT --arm NAME WEIGHT COUNT ...`
+**Command:** `python -m decisionlab srm --arm NAME WEIGHT COUNT --arm NAME WEIGHT COUNT ...` or `python -m decisionlab srm --daily FILE.csv`
 
 ## The problem it solves
 
@@ -56,6 +56,39 @@ No sample ratio mismatch (p = 0.6892, at or above the 0.01 threshold). The obser
 
 180 users out of 10,000 either way is a small-looking gap, but it is enough to fail this check. That is the point: SRM is not about how big the gap looks, it is about whether it is bigger than the randomness of assignment alone would produce.
 
+## Check it day by day
+
+A split that breaks on day 6 of a two week test is best caught on day 6, not day 14. Optimizely's [support page on its automatic SRM detection](https://support.optimizely.com/hc/en-us/articles/13409080412173-Optimizely-s-automatic-sample-ratio-mismatch-detection) says it checks daily and not only at the end (page updated 2026-03-06, checked 2026-09-30). Give the tool a CSV with the columns `day,arm,count`, one row per arm per day:
+
+```bash
+python -m decisionlab srm --daily examples/srm_daily.csv
+```
+
+`examples/srm_daily.csv` is illustrative, made up for this page. Lines starting with `#` are comments. Use ISO dates (`2026-03-09`), because days are sorted as text. For a split that is not equal, add `--weight NAME WEIGHT` for each arm, for example `--weight treatment 2 --weight holdout 1`.
+
+```
+$ python -m decisionlab srm --daily examples/srm_daily.csv
+Arms, in split order: control / variant
+Day         Visitors  Total so far  Split so far   p so far  p that day  Flag
+----------  --------  ------------  -------------  --------  ----------  --------
+2026-03-01     2,010         2,010  50.3% / 49.7%    0.7548      0.7548
+2026-03-02     1,997         4,007  49.9% / 50.1%    0.8869      0.6068
+2026-03-03     1,996         6,003  50.0% / 50.0%    0.9485      0.7540
+2026-03-04     2,003         8,006  50.0% / 50.0%    0.9465      0.8059
+2026-03-05     2,006        10,012  50.1% / 49.9%    0.7643      0.4215
+2026-03-06     1,992        12,004  49.7% / 50.3%    0.4542      0.0121
+2026-03-07     1,991        13,995  49.2% / 50.8%    0.0745      0.0038  bad day
+2026-03-08     1,989        15,984  49.0% / 51.0%    0.0162      0.0370
+2026-03-09     1,991        17,975  48.8% / 51.2%    0.0009      0.0016  MISMATCH
+2026-03-10     1,988        19,963  48.6% / 51.4%   <0.0001      0.0136  MISMATCH
+
+The running total first shows a sample ratio mismatch on 2026-03-09 (p below 0.01). Look at what changed in assignment, logging or filters on or just before that day. Do not read conversion results from this test until the cause is found.
+```
+
+How to read it. "p so far" is the chi-square test on all visitors up to and including that day. "p that day" tests that day alone. `MISMATCH` means the running total is below the threshold. `bad day` means only that day alone is, which catches a bad day that the earlier good days dilute in the running total. A day with fewer than 5 expected visitors in an arm is never flagged. The first flagged day is where to start looking in the test's logs. The break here began on 2026-03-06, three days before the running total gave it away, so the flagged day is when the tool was sure, not when the fault started.
+
+Rows that cannot be read are listed by line number under "Problems in the file" and skipped. A day with no row for an arm counts that arm as 0 and says so.
+
 ## How to read it
 
 - **Chi-square, df, p-value**: the goodness-of-fit test comparing observed counts to the counts your weights imply.
@@ -74,6 +107,6 @@ The p-value threshold defaults to 0.01, following the convention Statsig documen
 ## What it does not do
 
 - Says only whether the split is off. It does not diagnose the cause. The verdict lists the usual suspects, but finding which one applies means checking the test's own logs.
-- Checked once, on the final counts. If you want to catch an SRM early, before running it out to the end of the test, you need to run this check periodically during the test, not just at the end. This tool does not do that monitoring itself, you rerun it with the day's counts.
-- No time dimension. Two arms that individually match 50/50 in total can still have had a broken week in the middle if one bad day offset another. Splitting the observed counts by day and running this per day would catch that. This version takes one set of totals.
+- The daily check repeats an ordinary chi-square test every day, so it gets many chances at a false alarm. If the looks were independent, the chance of at least one flag in k days at threshold a would be 1 - (1 - a)^k. The running totals overlap, so the real figure is lower, but this tool does not compute it. Optimizely says it uses a sequential SRM test, not a chi-square, which is built for repeated looks. This tool does not. For a long test, use `--alpha 0.001` and treat a lone flag close to the threshold as a reason to look, not proof.
+- The daily file is long format, one row per day and arm, and the tool does not run itself on a live feed. You export the counts and run it.
 - Assumes independent visitors, same as `ab-test`. Assignment randomised by account or by shared device needs a different variance calculation than the simple chi-square here.

@@ -30,6 +30,7 @@ Standard library only.
 from __future__ import annotations
 
 import argparse
+import csv
 import math
 from dataclasses import dataclass, field
 
@@ -167,6 +168,10 @@ def _p(p: float) -> str:
     return "p < 0.0001" if p < 0.0001 else f"p = {p:.4f}"
 
 
+def _pcell(p: float) -> str:
+    return "<0.0001" if p < 0.0001 else f"{p:.4f}"
+
+
 def verdict(r: Result) -> str:
     if r.mismatched:
         worst = max(range(len(r.arms)), key=lambda i: abs(r.arms[i].observed - r.expected[i]))
@@ -187,9 +192,158 @@ def verdict(r: Result) -> str:
     )
 
 
+@dataclass
+class DayResult:
+    day: str
+    day_total: int
+    cumulative: Result
+    day_only: Result
+
+
+@dataclass
+class DailyReport:
+    arm_names: list
+    days: list
+    first_cumulative_day: str | None
+    first_day_only_day: str | None
+    problems: list = field(default_factory=list)
+
+
+def load_daily(path: str):
+    """Read a long format CSV with columns day, arm, count. Returns
+    ({day: {arm: count}}, arm names in first seen order, problems). Bad rows are
+    reported with their line number and skipped. Repeated day and arm rows add up."""
+    counts: dict = {}
+    arm_names: list = []
+    problems: list = []
+    with open(path, newline="", encoding="utf-8-sig") as fh:
+        # Lines starting with # are comments, so an example file can label itself.
+        lines = [(n, ln) for n, ln in enumerate(fh, start=1)
+                 if ln.strip() and not ln.startswith("#")]
+        if not lines:
+            raise ValueError(f"{path}: the file is empty")
+        header = [h.strip() for h in next(csv.reader([lines[0][1]]))]
+        missing = {"day", "arm", "count"} - set(header)
+        if missing:
+            raise ValueError(f"{path}: missing column(s) {', '.join(sorted(missing))}. "
+                             "Expected the header day,arm,count")
+        for line_no, raw in lines[1:]:
+            fields = next(csv.reader([raw]))
+            if len(fields) != len(header):
+                problems.append(f"line {line_no}: expected {len(header)} fields, got {len(fields)}, skipped")
+                continue
+            row = dict(zip(header, fields))
+            day = (row["day"] or "").strip()
+            arm = (row["arm"] or "").strip()
+            if not day or not arm:
+                problems.append(f"line {line_no}: blank day or arm, skipped")
+                continue
+            try:
+                n = int((row["count"] or "").strip().replace(",", ""))
+            except ValueError:
+                problems.append(f"line {line_no}: count {row['count']!r} is not a whole number, skipped")
+                continue
+            if n < 0:
+                problems.append(f"line {line_no}: negative count, skipped")
+                continue
+            if arm not in arm_names:
+                arm_names.append(arm)
+            counts.setdefault(day, {})
+            counts[day][arm] = counts[day].get(arm, 0) + n
+    return counts, arm_names, problems
+
+
+def check_daily(counts: dict, arm_names: list, weights: dict | None = None,
+                alpha: float = 0.01) -> DailyReport:
+    """Run the SRM check on the running total after each day, and on each day alone.
+    Days are taken in sorted order, so use ISO dates (YYYY-MM-DD)."""
+    if len(arm_names) < 2:
+        raise ValueError("need at least two arms in the daily file")
+    if not counts:
+        raise ValueError("the daily file has no usable rows")
+    weights = weights or {}
+    unknown = set(weights) - set(arm_names)
+    if unknown:
+        raise ValueError(f"weight given for arm(s) not in the file: {', '.join(sorted(unknown))}")
+    problems: list = []
+    running = {a: 0 for a in arm_names}
+    days = []
+    first_cum = first_day = None
+    for day in sorted(counts):
+        for a in arm_names:
+            if a not in counts[day]:
+                problems.append(f"{day}: no row for arm {a!r}, counted as 0")
+        today = {a: counts[day].get(a, 0) for a in arm_names}
+        for a in arm_names:
+            running[a] += today[a]
+        total = sum(today.values())
+        if total == 0:
+            problems.append(f"{day}: no visitors in any arm, day skipped")
+            continue
+        cum = check([Arm(a, weights.get(a, 1.0), running[a]) for a in arm_names], alpha)
+        one = check([Arm(a, weights.get(a, 1.0), today[a]) for a in arm_names], alpha)
+        # A flag on a tiny sample is not trusted, see MIN_EXPECTED.
+        cum.mismatched = cum.mismatched and not cum.few_expected
+        one.mismatched = one.mismatched and not one.few_expected
+        if cum.mismatched and first_cum is None:
+            first_cum = day
+        if one.mismatched and first_day is None:
+            first_day = day
+        days.append(DayResult(day, total, cum, one))
+    if not days:
+        raise ValueError("no day in the file has any visitors")
+    return DailyReport(arm_names, days, first_cum, first_day, problems)
+
+
+def daily_verdict(rep: DailyReport, alpha: float) -> str:
+    n = len(rep.days)
+    if rep.first_cumulative_day:
+        return (
+            f"The running total first shows a sample ratio mismatch on {rep.first_cumulative_day} "
+            f"(p below {alpha}). Look at what changed in assignment, logging or filters on or just "
+            "before that day. Do not read conversion results from this test until the cause is found."
+        )
+    if rep.first_day_only_day:
+        return (
+            f"The running total never crosses the {alpha} threshold, but {rep.first_day_only_day} "
+            "alone does. A bad day can be hidden by good days around it. Check what happened on that day."
+        )
+    return (
+        f"No sample ratio mismatch on any of {n} daily checks at the {alpha} threshold. "
+        "This does not prove assignment is bug free. Note that checking every day gives the "
+        "test many chances to raise a false alarm, so a lone flag near the threshold deserves a "
+        "second look rather than instant panic."
+    )
+
+
+def _print_daily(rep: DailyReport, alpha: float) -> None:
+    headers = ["Day", "Visitors", "Total so far", "Split so far", "p so far", "p that day", "Flag"]
+    rows = []
+    running = 0
+    for d in rep.days:
+        running += d.day_total
+        tot = sum(a.observed for a in d.cumulative.arms) or 1
+        split = " / ".join(pct(a.observed / tot, 1) for a in d.cumulative.arms)
+        flag = ("MISMATCH" if d.cumulative.mismatched
+                else "bad day" if d.day_only.mismatched else "")
+        rows.append([d.day, f"{d.day_total:,}", f"{running:,}", split,
+                     _pcell(d.cumulative.p_value), _pcell(d.day_only.p_value), flag])
+    print("Arms, in split order: " + " / ".join(rep.arm_names))
+    print(format_table(headers, rows, left=(0, 3, 6)))
+    print()
+    print(daily_verdict(rep, alpha))
+
+
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--arm", nargs=3, action="append", required=True,
+        "--daily", metavar="CSV",
+        help="a CSV with columns day,arm,count. Checks the running total after every day "
+             "and each day alone, and names the first day the split goes wrong. Use instead of --arm.",
+    )
+    parser.add_argument("--weight", nargs=2, action="append", metavar=("NAME", "WEIGHT"),
+                        help="with --daily, expected weight for an arm (default 1 for every arm)")
+    parser.add_argument(
+        "--arm", nargs=3, action="append",
         metavar=("NAME", "EXPECTED_WEIGHT", "OBSERVED_COUNT"),
         help="repeat once per arm, for example --arm control 1 4820 --arm variant 1 5180. "
              "Weights only need to be in proportion: 1 1 means 50/50, 2 1 means a 2:1 split.",
@@ -198,8 +352,38 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
                         help="p-value threshold for flagging a mismatch (default 0.01)")
 
 
+def run_daily(args: argparse.Namespace) -> int:
+    if args.arm:
+        raise ValueError("use either --daily or --arm, not both")
+    weights = {}
+    for name, w in args.weight or []:
+        try:
+            weights[name] = float(w)
+        except ValueError:
+            raise ValueError(f"{name!r}: expected weight {w!r} is not a number") from None
+    counts, arm_names, problems = load_daily(args.daily)
+    try:
+        rep = check_daily(counts, arm_names, weights, args.alpha)
+    except ValueError as exc:
+        if problems:
+            raise ValueError(f"{exc}. Rows skipped: " + "; ".join(problems)) from None
+        raise
+    _print_daily(rep, args.alpha)
+    problems += rep.problems
+    if problems:
+        print()
+        print("Problems in the file:")
+        for line in problems:
+            print(f"  {line}")
+    return 0
+
+
 def run(args: argparse.Namespace) -> int:
-    if len(args.arm) < 2:
+    if args.daily:
+        return run_daily(args)
+    if args.weight:
+        raise ValueError("--weight only works with --daily. With --arm, give the weight in the arm")
+    if not args.arm or len(args.arm) < 2:
         raise ValueError("need at least two --arm entries to check a split")
     arms = []
     for name, weight_s, count_s in args.arm:

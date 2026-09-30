@@ -1,0 +1,22 @@
+# Illustrative data, made up for this example. Not from a real experiment. From day 6 the control arm loses visitors, as a broken redirect might cause.
+day,arm,count
+2026-03-01,control,1012
+2026-03-01,variant,998
+2026-03-02,control,987
+2026-03-02,variant,1010
+2026-03-03,control,1005
+2026-03-03,variant,991
+2026-03-04,control,996
+2026-03-04,variant,1007
+2026-03-05,control,1021
+2026-03-05,variant,985
+2026-03-06,control,940
+2026-03-06,variant,1052
+2026-03-07,control,931
+2026-03-07,variant,1060
+2026-03-08,control,948
+2026-03-08,variant,1041
+2026-03-09,control,925
+2026-03-09,variant,1066
+2026-03-10,control,939
+2026-03-10,variant,1049

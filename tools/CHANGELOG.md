@@ -9,6 +9,9 @@ What changed, and the problem it fixes. One or two lines.
 
 The point of this file is to make improvement visible. A repo of forty one-off scripts is worth less than six tools that got better, but only if the getting better is legible from the outside.
 
+## 2026-09-30  srm
+`--daily FILE.csv` checks the running total after every day and each day alone, and names the first day the split goes wrong, so a broken split is caught mid-test. `--weight` sets unequal splits. Bad rows are reported by line number. Repeated daily looks raise the false alarm rate, which the docs say plainly. Optimizely uses a sequential test for this and this tool does not.
+
 ## 2026-09-29  unit-economics
 First version. CAC, contribution, LTV and payback per customer from a JSON model with low and high values. Payback allows for churn instead of dividing CAC by contribution, LTV can be capped at a horizon, and a sensitivity table ranks inputs by swing in LTV / CAC. An "everything goes wrong at once" row covers the combined case that one-at-a-time testing misses. Standard library only.
 
