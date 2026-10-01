@@ -9,6 +9,9 @@ What changed, and the problem it fixes. One or two lines.
 
 The point of this file is to make improvement visible. A repo of forty one-off scripts is worth less than six tools that got better, but only if the getting better is legible from the outside.
 
+## 2026-10-01  nps
+First version. NPS from raw 0 to 10 replies with a confidence interval, and a z-test between two segments, so a few points of movement is not reported as a trend when it is noise. Warns under 30 replies and when every reply sits in one group. Plain Wald interval, and the docs say it is not the adjusted-Wald method. Standard library only.
+
 ## 2026-09-30  srm
 `--daily FILE.csv` checks the running total after every day and each day alone, and names the first day the split goes wrong, so a broken split is caught mid-test. `--weight` sets unequal splits. Bad rows are reported by line number. Repeated daily looks raise the false alarm rate, which the docs say plainly. Optimizely uses a sequential test for this and this tool does not.
 

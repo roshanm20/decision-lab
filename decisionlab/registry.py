@@ -17,6 +17,7 @@ TOOL_MODULES = [
     "decisionlab.marketing.ab_test",
     "decisionlab.marketing.srm",
     "decisionlab.product.rice",
+    "decisionlab.product.nps",
 ]
 
 PERSONAS = {

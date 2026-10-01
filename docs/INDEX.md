@@ -1,6 +1,6 @@
 # Index
 
-6 tools, 142 tests, 4 notes.
+7 tools, 157 tests, 4 notes.
 
 ## Tools
 
@@ -21,6 +21,7 @@
 **For product managers**
 
 - [`rice`](../docs/tools/rice.md) Ranks a backlog by RICE and flags which positions depend on a confidence guess being right.
+- [`nps`](../docs/tools/nps.md) Scores NPS from raw 0 to 10 replies, puts an interval on it and tests whether two segments really differ.
 
 ## Notes
 

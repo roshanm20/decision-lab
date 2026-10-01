@@ -21,7 +21,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 <!-- INDEX:START -->
 
-**6 tools across 4 groups, 142 tests, 4 written notes.**
+**7 tools across 4 groups, 157 tests, 4 written notes.**
 
 **For consultants**
 
@@ -40,6 +40,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 **For product managers**
 
 - [`rice`](docs/tools/rice.md) Ranks a backlog by RICE and flags which positions depend on a confidence guess being right.
+- [`nps`](docs/tools/nps.md) Scores NPS from raw 0 to 10 replies, puts an interval on it and tests whether two segments really differ.
 
 **Latest notes**
 
