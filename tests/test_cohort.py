@@ -57,3 +57,47 @@ def test_cli_rejects_negative_periods():
 def test_dates_without_zero_padding_are_read():
     assert month_key("2025-4-7") == "2025-04"
     assert month_key("2025-04-17 09:31") == "2025-04"
+
+
+def _small_cohort_rows():
+    # Jan cohort: 4 customers, 2 return in Feb. Feb cohort: 1 customer, never returns.
+    rows = [(f"J{i}", "2025-01", 0) for i in range(4)]
+    rows += [("J0", "2025-02", 0), ("J1", "2025-02", 0), ("F1", "2025-02", 0)]
+    return rows
+
+
+def test_min_size_leaves_small_cohort_out_of_average(capsys):
+    from decisionlab.bi.cohort import print_table
+    cohorts, sizes, grid, last = build_cohorts(_small_cohort_rows(), "customers", periods=1)
+    # Worked by hand: M1 over all cohorts that reached it is 2 of 4 = 50%. The Feb
+    # cohort has not reached M1. Its M0 is 1 customer, so it is small at min_size 2.
+    print_table(cohorts, sizes, grid, 1, "customers", True, last, min_size=2)
+    out = capsys.readouterr().out
+    assert "1*" in out
+    assert "1 of 2 cohorts have fewer than 2 customers" in out
+    all_line = [l for l in out.splitlines() if l.strip().startswith("All")][0]
+    assert all_line.split()[1] == "4"      # only the Jan cohort counts
+    assert all_line.split()[-1] == "50%"
+
+
+def test_min_size_zero_changes_nothing(capsys):
+    from decisionlab.bi.cohort import print_table
+    cohorts, sizes, grid, last = build_cohorts(_small_cohort_rows(), "customers", periods=1)
+    print_table(cohorts, sizes, grid, 1, "customers", True, last)
+    out = capsys.readouterr().out
+    assert "*" not in out
+    assert [l for l in out.splitlines() if l.strip().startswith("All")][0].split()[1] == "5"
+
+
+def test_min_size_larger_than_every_cohort_gives_blank_average(capsys):
+    from decisionlab.bi.cohort import print_table
+    cohorts, sizes, grid, last = build_cohorts(_small_cohort_rows(), "customers", periods=1)
+    print_table(cohorts, sizes, grid, 1, "customers", True, last, min_size=100)
+    out = capsys.readouterr().out
+    assert "2 of 2 cohorts" in out
+    assert "%" not in [l for l in out.splitlines() if l.strip().startswith("All")][0]
+
+
+def test_cli_rejects_negative_min_size():
+    from decisionlab.cli import main
+    assert main(["cohort", "--demo", "--min-size", "-5"]) == 2

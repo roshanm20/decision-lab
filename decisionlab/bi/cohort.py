@@ -134,7 +134,7 @@ def build_cohorts(rows, metric, periods):
     return cohorts, sizes, grid, last_month
 
 
-def print_table(cohorts, sizes, grid, periods, metric, as_percent, last_month):
+def print_table(cohorts, sizes, grid, periods, metric, as_percent, last_month, min_size=0):
     header = ["Cohort", "Size"] + [f"M{i}" for i in range(periods + 1)]
     widths = [max(len(header[0]), 7), max(len(header[1]), 5)] + [7] * (periods + 1)
 
@@ -146,7 +146,8 @@ def print_table(cohorts, sizes, grid, periods, metric, as_percent, last_month):
 
     for cohort in cohorts:
         base = grid[(cohort, 0)]
-        cells = [cohort, sizes[cohort]]
+        small = sizes[cohort] < min_size
+        cells = [cohort, f"{sizes[cohort]}*" if small else sizes[cohort]]
         for offset in range(periods + 1):
             if month_add(cohort, offset) > last_month:
                 cells.append("")       # that month has not happened yet
@@ -162,17 +163,32 @@ def print_table(cohorts, sizes, grid, periods, metric, as_percent, last_month):
 
     print()
     print("Average across cohorts, weighted by cohort size:")
+    kept = [c for c in cohorts if sizes[c] >= min_size]
     avg = []
     for offset in range(periods + 1):
         eligible = [
-            c for c in cohorts
+            c for c in kept
             if grid[(c, 0)] > 0 and month_add(c, offset) <= last_month
         ]
         num = sum(grid[(c, offset)] for c in eligible)
         den = sum(grid[(c, 0)] for c in eligible)
         avg.append("" if den == 0 else f"{num / den * 100:.0f}%")
-    print(line(["All", sum(sizes.values())] + avg))
+    print(line(["All", sum(sizes[c] for c in kept)] + avg))
     print()
+    if min_size > 0:
+        left_out = [c for c in cohorts if sizes[c] < min_size]
+        smallest = min((sizes[c] for c in left_out), default=1)
+        if left_out:
+            print(
+                f"* {len(left_out)} of {len(cohorts)} cohorts have fewer than {min_size} "
+                f"customers and are left out of the average row "
+                f"({sum(sizes[c] for c in left_out):,} customers). Their own percentages "
+                f"are mostly noise: in the smallest, one customer moves the percentage "
+                f"by {100 / smallest:.1f} points."
+            )
+        else:
+            print(f"No cohort has fewer than {min_size} customers.")
+        print()
     print(
         "Blank cells are months that have not happened yet for that cohort, not "
         "zero retention. The average row only uses cohorts that have reached the "
@@ -180,10 +196,11 @@ def print_table(cohorts, sizes, grid, periods, metric, as_percent, last_month):
     )
 
 
-def write_csv(path, cohorts, sizes, grid, periods, as_percent, metric, last_month):
+def write_csv(path, cohorts, sizes, grid, periods, as_percent, metric, last_month, min_size=0):
     with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
-        writer.writerow(["cohort", "size"] + [f"m{i}" for i in range(periods + 1)])
+        extra = ["small"] if min_size > 0 else []
+        writer.writerow(["cohort", "size"] + [f"m{i}" for i in range(periods + 1)] + extra)
         for cohort in cohorts:
             base = grid[(cohort, 0)]
             row = [cohort, sizes[cohort]]
@@ -196,6 +213,8 @@ def write_csv(path, cohorts, sizes, grid, periods, as_percent, metric, last_mont
                     row.append("" if base == 0 else round(value / base * 100, 1))
                 else:
                     row.append(round(value, 2) if metric == "revenue" else int(value))
+            if min_size > 0:
+                row.append("yes" if sizes[cohort] < min_size else "no")
             writer.writerow(row)
     print(f"Written to {path}")
 
@@ -243,6 +262,8 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--revenue-col", default="revenue")
     parser.add_argument("--metric", choices=["customers", "revenue"], default="customers")
     parser.add_argument("--periods", type=int, default=8, help="months after the first, default 8")
+    parser.add_argument("--min-size", type=int, default=0, metavar="N",
+                        help="mark cohorts under N customers with * and leave them out of the average row")
     parser.add_argument("--absolute", action="store_true", help="show counts instead of percentages")
     parser.add_argument("--out", help="also write the table to this CSV")
     parser.add_argument("--demo", action="store_true",
@@ -252,6 +273,8 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
 def run(args: argparse.Namespace) -> int:
     if args.periods < 0:
         raise ValueError("--periods cannot be negative")
+    if args.min_size < 0:
+        raise ValueError("--min-size cannot be negative")
     path = args.csv_path
     if args.demo:
         path = make_demo()
@@ -279,9 +302,10 @@ def run(args: argparse.Namespace) -> int:
     shown = "counts" if args.absolute else "percent of the cohort's own first month"
     print(f"Metric: {args.metric}. Showing {shown}. Size column is always customers.")
     print()
-    print_table(cohorts, sizes, grid, args.periods, args.metric, not args.absolute, last_month)
+    print_table(cohorts, sizes, grid, args.periods, args.metric, not args.absolute,
+                last_month, args.min_size)
 
     if args.out:
         write_csv(args.out, cohorts, sizes, grid, args.periods,
-                  not args.absolute, args.metric, last_month)
+                  not args.absolute, args.metric, last_month, args.min_size)
     return 0

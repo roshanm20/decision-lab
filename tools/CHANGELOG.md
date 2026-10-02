@@ -9,6 +9,9 @@ What changed, and the problem it fixes. One or two lines.
 
 The point of this file is to make improvement visible. A repo of forty one-off scripts is worth less than six tools that got better, but only if the getting better is legible from the outside.
 
+## 2026-10-02  cohort
+`--min-size N` marks cohorts under N customers with `*`, leaves them out of the average row, and says how many customers were left out. A 40-customer cohort used to get a row that looked as solid as one of 4,000. Default 0 keeps the old output. The CSV gets a `small` column when it is used.
+
 ## 2026-10-01  nps
 First version. NPS from raw 0 to 10 replies with a confidence interval, and a z-test between two segments, so a few points of movement is not reported as a trend when it is noise. Warns under 30 replies and when every reply sits in one group. Plain Wald interval, and the docs say it is not the adjusted-Wald method. Standard library only.
 
