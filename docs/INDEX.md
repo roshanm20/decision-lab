@@ -1,6 +1,6 @@
 # Index
 
-7 tools, 161 tests, 4 notes.
+7 tools, 161 tests, 5 notes.
 
 ## Tools
 
@@ -27,6 +27,8 @@
 
 ### Applied notes, the tools used on real data
 
+- **[Does Unbounce's 336 percent test win survive its own numbers](../content/notes/2026-10-03-unbounce-336-percent-test.md)** (2026-10-03)  
+  The published 336 percent lift rests on one conversion in the control arm, and re-run with this repo's ab-test tool it is not significant at the 95 percent level, so the page's conclusion is not proven by its own data.
 - **[Sizing India's electric two-wheeler market and testing the sizing tool](../content/notes/2026-09-26-india-electric-two-wheeler-market.md)** (2026-09-26)  
   India's electric two-wheeler market was worth roughly 13,700 to 17,800 crore rupees at ex-showroom prices in FY2024-25, but the bigger finding is that this tool's top-down versus bottom-up check only catches a real error when the two chains do not share an input, and here they shared both the units and the price.
 

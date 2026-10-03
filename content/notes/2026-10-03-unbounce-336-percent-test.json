@@ -1,0 +1,22 @@
+{
+  "about": "Inputs for the note 2026-10-03-unbounce-336-percent-test.md. These counts are my reconstruction from the published rates and the published total of 120 visits. They are not printed in the source.",
+  "source": "https://unbounce.com/a-b-testing/how-a-single-a-b-test-increased-conversions/",
+  "checked": "2026-10-03",
+  "published": {
+    "total_visits": 120,
+    "control_rate_percent": 3.12,
+    "challenger_rate_percent": 13.64,
+    "duration_days": 23,
+    "stated_confidence_percent": 95.2
+  },
+  "reconstructed": {
+    "control": {"visitors": 32, "conversions": 1},
+    "challenger": {"visitors": 88, "conversions": 12}
+  },
+  "commands": [
+    "python -m decisionlab ab-test analyze --control 32 1 --variant 88 12 --mde 0.05",
+    "python -m decisionlab ab-test analyze --control 32 0 --variant 88 12 --mde 0.05",
+    "python -m decisionlab ab-test analyze --control 32 2 --variant 88 12 --mde 0.05",
+    "python -m decisionlab ab-test analyze --control 32 3 --variant 88 12 --mde 0.05"
+  ]
+}

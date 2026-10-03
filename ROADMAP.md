@@ -159,7 +159,7 @@ Saturday is a writing day. The best notes use one of the tools above on real, so
 - [x] NT-01 | note | Size a real Indian market with market-size, every number sourced | M
   - why: the tool's only example is invented. A sourced one shows it works on a real question.
   - done when: a note in `content/notes` with the JSON model committed, every input cited with a date checked, and a stated position.
-- [ ] NT-02 | note | Re-check a published A/B test case study with ab-test | M
+- [x] NT-02 | note | Re-check a published A/B test case study with ab-test | M
   - why: many published test wins do not survive their own numbers.
   - done when: a public case with visitor and conversion counts, re-analysed, with a clear verdict on whether its conclusion holds.
 - [ ] NT-03 | note | Teardown of an AI research or competitive intelligence product | M

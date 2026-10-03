@@ -21,7 +21,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 <!-- INDEX:START -->
 
-**7 tools across 4 groups, 161 tests, 4 written notes.**
+**7 tools across 4 groups, 161 tests, 5 written notes.**
 
 **For consultants**
 
@@ -44,6 +44,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 **Latest notes**
 
+- `2026-10-03` [Does Unbounce's 336 percent test win survive its own numbers](content/notes/2026-10-03-unbounce-336-percent-test.md)
 - `2026-09-26` [Sizing India's electric two-wheeler market and testing the sizing tool](content/notes/2026-09-26-india-electric-two-wheeler-market.md)
 - `2026-09-22` [Zaigo's AI due diligence for private equity](content/teardowns/2026-09-22-zaigo-ai-due-diligence.md)
 - `2026-09-21` [Why summing daily unique users overstates monthly reach](bi/analyses/2026-09-21-unique-user-double-counting.md)
