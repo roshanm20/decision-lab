@@ -2,6 +2,19 @@
 
 Releases are cut on Sundays when the week changed the tools. Versions follow semantic versioning: a new tool or option is a minor bump, a fix is a patch.
 
+## 0.3.0, 2026-10-04
+
+### Added
+
+- `unit-economics` for consultants: CAC, contribution, LTV and payback from a JSON model. Payback allows for churn, and a sensitivity table ranks inputs by their swing in LTV / CAC.
+- `nps` for product managers: NPS from raw 0 to 10 replies with a confidence interval, and a z-test between two segments. Uses the plain Wald interval, which the docs say.
+- A note re-checking a published 336 percent A/B test win with `ab-test`.
+
+### Changed
+
+- `srm` takes `--daily FILE.csv` to check the split after every day and name the first bad day, and `--weight` for unequal splits.
+- `cohort` takes `--min-size N` to mark small cohorts and leave them out of the average row.
+
 ## 0.2.0, 2026-09-27
 
 ### Added

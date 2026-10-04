@@ -49,5 +49,6 @@
 
 ## Weekly logs
 
+- [Week three log, two new tools, two extended, tests from 98 to 161](../weekly/2026-10-04-week-log.md) (2026-10-04)
 - [Week two log, srm shipped, rice extended, tests from zero to 98](../weekly/2026-09-27-week-log.md) (2026-09-27)
 - [Week one log, repo setup plus one tool](../weekly/2026-09-20-week-review.md) (2026-09-20)

@@ -49,6 +49,12 @@ The order inside a section is the priority. Extending a tool that people already
 - [ ] BI-11 | new | grain-check: catch a non-additive metric being summed to a coarser grain | S
   - why: a materialised metric view, dbt's semantic layer is one example, computes a metric like distinct users at a fixed grain, and re-aggregating it to a coarser grain by summing gives a silently wrong number, the same mistake BI-06 fixes for DAU and MAU. Found in dbt Core 2.0.1 release notes, checked 2026-09-21.
   - done when: given a metric's aggregation type (sum, distinct-count, average) and its stored grain against a requested coarser grain, says whether summing across is safe, and refuses with a clear message when it is not, tests.
+- [ ] BI-12 | extend | cohort: confidence interval on each retention cell | M
+  - why: `--min-size` only cuts off by headcount. A cell at 60 customers still gets a percentage with no sense of its spread. Found in a Medium post on significance in retention cohorts (https://medium.com/@odedran/how-to-measure-statistical-significance-in-retention-cohorts-530a4e5a2c93), checked 2026-10-02, but the page gave an access error, so the method is unread.
+  - done when: the method is confirmed from a page that can be read, `--ci` prints an interval per cell, tests check one interval against a hand-worked value, and the docs say which interval is used.
+- [ ] BI-13 | extend | funnel: per-segment comparison | S
+  - why: Plane's funnel guide for product managers says segmenting shows which users struggle at a step (https://plane.so/blog/conversion-funnel-analysis-for-product-managers-how-to-spot-drop-offs, checked 2026-10-02). Needs BI-02 first.
+  - done when: a segment column splits the funnel, the step where two segments differ most is named with a significance check, tests.
 
 ## consulting
 
@@ -82,6 +88,9 @@ The order inside a section is the priority. Extending a tool that people already
 - [ ] CO-10 | new | two-by-two: a prioritisation matrix as SVG | M
   - why: effort-impact and similar 2x2s are the most common consulting chart.
   - done when: CSV with name, x and y produces an SVG with quadrant labels and no overlapping text for up to 20 points, tests.
+- [ ] CO-11 | extend | unit-economics: weight by segment and let churn fall over time | M
+  - why: SMB and enterprise customers churn differently, so one blended LTV misleads. The model also assumes one flat churn rate. Found in a SaaS unit economics guide (https://www.fiscallion.io/blog/saas-unit-economics), checked 2026-09-29.
+  - done when: the JSON model accepts segments with their own inputs and a mix, the output shows each segment and the weighted total, an optional churn curve replaces the flat rate, tests check a two-segment case worked by hand.
 
 ## marketing
 
@@ -118,6 +127,9 @@ The order inside a section is the priority. Extending a tool that people already
 - [ ] MK-10 | new | email-health: list health from email campaign results | S
   - why: open rates stopped being reliable, and teams miss rising unsubscribe and bounce rates.
   - done when: campaign CSV in, click, unsubscribe and bounce trends with flags out, tests.
+- [ ] MK-12 | extend | srm: a sequential test for daily looks | M
+  - why: `srm --daily` repeats a chi-square check and so raises the false alarm rate, as its docs say. Nie et al. propose sequential analysis for this (https://arxiv.org/abs/2208.07766, checked 2026-09-30). Only the abstract has been read.
+  - done when: the paper's method is read in full, a sequential option is added with its false alarm rate shown by simulation in a test, and the docs state what is and is not the same as Optimizely's detector.
 
 ## product
 
@@ -151,6 +163,12 @@ The order inside a section is the priority. Extending a tool that people already
 - [ ] PM-10 | new | prd: a PRD skeleton from a short problem statement | S
   - why: specs skip non-goals and success metrics more than anything else.
   - done when: a short YAML brief in, a markdown PRD with goals, non-goals, metrics and open questions out, and a check that non-goals and metrics are not empty, tests.
+- [ ] PM-11 | extend | nps: sample size needed to detect a gap | S
+  - why: teams run an NPS survey without knowing how many replies they need. MeasuringU suggests a variance of 0.75 as a ceiling when there is no prior data (https://measuringu.com/statistical-analysis-nps/, checked 2026-10-01).
+  - done when: a `--plan` option gives replies per segment for a target gap, the formula is confirmed against a second source named in the docs, tests check one value worked by hand.
+- [ ] PM-12 | extend | nps: adjusted-Wald interval option | S
+  - why: the tool uses the plain Wald interval, which MeasuringU says is not the recommended method (same page, checked 2026-10-01). The page does not state the constants.
+  - done when: a source that states the adjustment is found and linked, `--adjusted` uses it, tests check one interval worked by hand, and the docs limitation is updated.
 
 ## notes
 
