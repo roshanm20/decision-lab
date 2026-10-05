@@ -9,6 +9,9 @@ What changed, and the problem it fixes. One or two lines.
 
 The point of this file is to make improvement visible. A repo of forty one-off scripts is worth less than six tools that got better, but only if the getting better is legible from the outside.
 
+## 2026-10-05  funnel
+First version. Step conversion against the previous step with Wilson intervals, from a step-count CSV or an event log. Names the step with the lowest rate and says whether its interval overlaps the next lowest. Blank step counts are skipped and reported, rising counts are refused, and users who skip a step in an event log are counted and flagged. Standard library only.
+
 ## 2026-10-02  cohort
 `--min-size N` marks cohorts under N customers with `*`, leaves them out of the average row, and says how many customers were left out. A 40-customer cohort used to get a row that looked as solid as one of 4,000. Default 0 keeps the old output. The CSV gets a `small` column when it is used.
 

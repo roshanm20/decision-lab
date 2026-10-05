@@ -19,7 +19,7 @@ The order inside a section is the priority. Extending a tool that people already
 - [x] BI-01 | extend | cohort: flag and leave out small cohorts | S
   - why: a 40-customer cohort gets its own row that looks as solid as a cohort of 4,000, even though its percentages are mostly noise. Raised on the first Sunday check.
   - done when: `--min-size N` marks small cohorts, leaves them out of the average row, says how many were left out, and has tests.
-- [ ] BI-02 | new | funnel: step conversion, drop-off and the biggest leak | M
+- [x] BI-02 | new | funnel: step conversion, drop-off and the biggest leak | M
   - why: funnel charts show percentages without saying which drop is actually unusual or how sure we are about it.
   - done when: takes a step-count CSV or an event log, handles missing steps, gives step conversion with confidence intervals, names the biggest leak, has tests and a docs page.
 - [ ] BI-03 | new | metric-sql: metric definitions in YAML turned into SQL | M

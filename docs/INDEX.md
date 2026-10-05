@@ -1,6 +1,6 @@
 # Index
 
-7 tools, 161 tests, 5 notes.
+8 tools, 181 tests, 5 notes.
 
 ## Tools
 
@@ -12,6 +12,7 @@
 **For BI and analytics**
 
 - [`cohort`](../docs/tools/cohort.md) Monthly cohort retention from a transactions CSV that leaves unreached months blank instead of showing them as zero.
+- [`funnel`](../docs/tools/funnel.md) Step-by-step conversion with confidence intervals from step counts or an event log, naming the step that leaks most.
 
 **For marketers**
 

@@ -21,7 +21,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 <!-- INDEX:START -->
 
-**7 tools across 4 groups, 161 tests, 5 written notes.**
+**8 tools across 4 groups, 181 tests, 5 written notes.**
 
 **For consultants**
 
@@ -31,6 +31,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 **For BI and analytics**
 
 - [`cohort`](docs/tools/cohort.md) Monthly cohort retention from a transactions CSV that leaves unreached months blank instead of showing them as zero.
+- [`funnel`](docs/tools/funnel.md) Step-by-step conversion with confidence intervals from step counts or an event log, naming the step that leaks most.
 
 **For marketers**
 

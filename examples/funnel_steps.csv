@@ -1,0 +1,8 @@
+# Illustrative: invented counts for a made-up checkout, not real data.
+step,users
+Product page,10000
+Add to cart,2400
+Start checkout,1500
+Enter address,1260
+Enter payment,
+Pay,610
