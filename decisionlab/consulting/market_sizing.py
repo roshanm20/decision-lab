@@ -14,6 +14,10 @@ single spreadsheet cell does not:
      low, base and high) and reports P10, P50 and P90, so the output is a
      range with a stated spread instead of one falsely precise number.
 
+An approach can also be several segments whose totals add (for example
+students plus working professionals), and the model can name a SAM and a
+SOM share so TAM, SAM and SOM are labelled in the output.
+
 The model is a small JSON file. Run with --example to print one. Every
 number in the example is illustrative, invented to show the format.
 Standard library only.
@@ -71,8 +75,53 @@ class Step:
         return self.low is not None and self.high is not None
 
 
+class Segmented:
+    """An approach made of segments whose totals add. Each segment is its own chain."""
+
+    def __init__(self, segments: dict):
+        self.segments = segments
+
+
+def parse_chain(where_name: str, steps) -> list:
+    """Validate one chain of steps and return [Step, ...]."""
+    name = where_name
+    if not isinstance(steps, list) or not steps:
+        raise ValueError(f"{name} has no steps")
+    chain = []
+    for i, raw in enumerate(steps, start=1):
+        if not isinstance(raw, dict) or "label" not in raw or "value" not in raw:
+            raise ValueError(f"{name} step {i} needs to be an object with a label and a value")
+
+        def num(key):
+            v = raw.get(key)
+            if v is None:
+                return None
+            if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or v in (float("inf"), float("-inf")):
+                raise ValueError(f"{name} step {i}: {key} must be a plain number, got {v!r}")
+            return float(v)
+
+        value = num("value")
+        if value is None:
+            raise ValueError(f"{name} step {i}: value cannot be empty")
+        st = Step(label=str(raw["label"]), value=value, low=num("low"), high=num("high"),
+                  kind=str(raw.get("kind", "count")))
+        where = f"{name} step {i} ({st.label})"
+        if st.value < 0:
+            raise ValueError(f"{where}: value cannot be negative")
+        if (st.low is None) != (st.high is None):
+            raise ValueError(f"{where}: give both low and high, or neither")
+        if st.has_range and not st.low <= st.value <= st.high:
+            raise ValueError(f"{where}: needs low <= value <= high, got {st.low}, {st.value}, {st.high}")
+        if st.kind == "share":
+            for v in (st.value, st.low, st.high):
+                if v is not None and not 0 <= v <= 1:
+                    raise ValueError(f"{where}: a share must be between 0 and 1, got {v}")
+        chain.append(st)
+    return chain
+
+
 def parse_model(model: dict) -> dict:
-    """Validate the JSON model and return {approach_name: [Step, ...]}."""
+    """Validate the JSON model and return {approach_name: [Step, ...] or Segmented}."""
     if not isinstance(model, dict):
         raise ValueError("the model file must be a JSON object, see --example")
     approaches = model.get("approaches")
@@ -80,40 +129,37 @@ def parse_model(model: dict) -> dict:
         raise ValueError("the model needs an 'approaches' object with at least one chain of steps")
     parsed = {}
     for name, steps in approaches.items():
-        if not isinstance(steps, list) or not steps:
-            raise ValueError(f"approach {name!r} has no steps")
-        chain = []
-        for i, raw in enumerate(steps, start=1):
-            if not isinstance(raw, dict) or "label" not in raw or "value" not in raw:
-                raise ValueError(f"{name} step {i} needs to be an object with a label and a value")
-
-            def num(key):
-                v = raw.get(key)
-                if v is None:
-                    return None
-                if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or v in (float("inf"), float("-inf")):
-                    raise ValueError(f"{name} step {i}: {key} must be a plain number, got {v!r}")
-                return float(v)
-
-            value = num("value")
-            if value is None:
-                raise ValueError(f"{name} step {i}: value cannot be empty")
-            st = Step(label=str(raw["label"]), value=value, low=num("low"), high=num("high"),
-                      kind=str(raw.get("kind", "count")))
-            where = f"{name} step {i} ({st.label})"
-            if st.value < 0:
-                raise ValueError(f"{where}: value cannot be negative")
-            if (st.low is None) != (st.high is None):
-                raise ValueError(f"{where}: give both low and high, or neither")
-            if st.has_range and not st.low <= st.value <= st.high:
-                raise ValueError(f"{where}: needs low <= value <= high, got {st.low}, {st.value}, {st.high}")
-            if st.kind == "share":
-                for v in (st.value, st.low, st.high):
-                    if v is not None and not 0 <= v <= 1:
-                        raise ValueError(f"{where}: a share must be between 0 and 1, got {v}")
-            chain.append(st)
-        parsed[name] = chain
+        if isinstance(steps, dict):
+            segs = steps.get("segments")
+            if not isinstance(segs, dict) or not segs:
+                raise ValueError(f"approach {name!r} needs a 'segments' object with at least one segment")
+            parsed[name] = Segmented({seg: parse_chain(f"{name} / {seg}", chain)
+                                      for seg, chain in segs.items()})
+        else:
+            parsed[name] = parse_chain(name, steps)
     return parsed
+
+
+def parse_serviceable(model: dict) -> list:
+    """Optional SAM and SOM shares, as [(code, Step)]. SOM needs SAM, since it is a share of SAM."""
+    raw = model.get("serviceable")
+    if raw is None:
+        return []
+    if not isinstance(raw, dict) or not raw:
+        raise ValueError("'serviceable' must be an object with a 'sam' share and, optionally, a 'som' share")
+    unknown = set(raw) - {"sam", "som"}
+    if unknown:
+        raise ValueError(f"'serviceable' only takes 'sam' and 'som', got {sorted(unknown)}")
+    if "som" in raw and "sam" not in raw:
+        raise ValueError("'som' is a share of SAM, so 'serviceable' needs a 'sam' share as well")
+    out = []
+    for code in ("sam", "som"):
+        if code in raw:
+            step = dict(raw[code]) if isinstance(raw[code], dict) else raw[code]
+            if isinstance(step, dict):
+                step["kind"] = "share"
+            out.append((code, parse_chain(f"serviceable {code}", [step])[0]))
+    return out
 
 
 def product(values) -> float:
@@ -123,31 +169,49 @@ def product(values) -> float:
     return total
 
 
-def estimate(chain: list) -> float:
-    return product(s.value for s in chain)
+def segments_of(approach) -> list:
+    """[(segment name, chain)]. A plain chain is one unnamed segment."""
+    if isinstance(approach, Segmented):
+        return list(approach.segments.items())
+    return [("", approach)]
 
 
-def sensitivity(chain: list) -> list:
-    """(label, result at low, result at high, swing), largest swing first."""
-    base = [s.value for s in chain]
+def estimate(approach) -> float:
+    return sum(product(s.value for s in chain) for _, chain in segments_of(approach))
+
+
+def sensitivity(approach) -> list:
+    """(label, result at low, result at high, swing), largest swing first.
+    The result is the whole approach total, so in a segmented approach a step
+    is judged by how far it moves the sum. Labels carry the segment name."""
+    segs = segments_of(approach)
+    seg_totals = [product(s.value for s in chain) for _, chain in segs]
     rows = []
-    for i, st in enumerate(chain):
-        if not st.has_range:
-            continue
-        lo = product(base[:i] + [st.low] + base[i + 1:])
-        hi = product(base[:i] + [st.high] + base[i + 1:])
-        rows.append((st.label, lo, hi, hi - lo))
+    for k, (seg_name, chain) in enumerate(segs):
+        base = [s.value for s in chain]
+        others = sum(seg_totals) - seg_totals[k]
+        for i, st in enumerate(chain):
+            if not st.has_range:
+                continue
+            lo = others + product(base[:i] + [st.low] + base[i + 1:])
+            hi = others + product(base[:i] + [st.high] + base[i + 1:])
+            label = f"{seg_name}: {st.label}" if seg_name else st.label
+            rows.append((label, lo, hi, hi - lo))
     return sorted(rows, key=lambda r: -r[3])
 
 
-def simulate(chain: list, runs: int, seed: int) -> tuple:
-    """P10, P50, P90 of the chain, drawing each ranged step from a triangular
-    distribution. Assumes the steps are independent of each other."""
+def simulate(approach, runs: int, seed: int, shares: tuple = ()) -> tuple:
+    """P10, P50, P90 of the approach total, drawing each ranged step from a
+    triangular distribution. Assumes the steps are independent of each other,
+    including a step that appears in more than one segment. `shares` are extra
+    steps multiplied onto the total, used for SAM and SOM."""
     rng = random.Random(seed)
+    draw = lambda s: rng.triangular(s.low, s.high, s.value) if s.has_range else s.value
+    segs = segments_of(approach)
     results = []
     for _ in range(runs):
-        results.append(product(
-            rng.triangular(s.low, s.high, s.value) if s.has_range else s.value for s in chain))
+        total = sum(product(draw(s) for s in chain) for _, chain in segs)
+        results.append(total * product(draw(s) for s in shares))
     results.sort()
     pick = lambda q: results[min(len(results) - 1, int(q * len(results)))]
     return pick(0.10), pick(0.50), pick(0.90)
@@ -187,6 +251,7 @@ def run(args: argparse.Namespace) -> int:
     with open(args.model, encoding="utf-8") as fh:
         model = json.load(fh)
     chains = parse_model(model)
+    serviceable = parse_serviceable(model)
     system = model.get("number_system", "intl")
     unit = model.get("unit", "")
     fmt = lambda x: compact(x, system)
@@ -199,13 +264,28 @@ def run(args: argparse.Namespace) -> int:
         estimates[name] = estimate(chain)
         print()
         print(f"== {name.replace('_', ' ')} ==")
-        running, rows = 1.0, []
-        for st in chain:
-            running *= st.value
-            shown = f"{st.value:.0%}" if st.kind == "share" else fmt(st.value)
-            rows.append([st.label, shown, fmt(running)])
-        print(table(["Step", "Value", "Running total"], rows))
-        print(f"Estimate: {fmt(estimates[name])}")
+        segs = segments_of(chain)
+        for seg_name, seg_chain in segs:
+            running, rows = 1.0, []
+            for st in seg_chain:
+                running *= st.value
+                shown = f"{st.value:.0%}" if st.kind == "share" else fmt(st.value)
+                rows.append([st.label, shown, fmt(running)])
+            if seg_name:
+                print(f"-- segment: {seg_name} --")
+            print(table(["Step", "Value", "Running total"], rows))
+            if seg_name:
+                print(f"Segment total: {fmt(running)}")
+        label = "TAM" if serviceable else "Estimate"
+        if len(segs) > 1:
+            print(f"{label} (segments added): {fmt(estimates[name])}")
+        else:
+            print(f"{label}: {fmt(estimates[name])}")
+        levels, level_value = [], estimates[name]
+        for code, st in serviceable:
+            level_value *= st.value
+            levels.append((code, st, level_value))
+            print(f"{code.upper()} ({st.label}, {st.value:.0%}): {fmt(level_value)}")
         sens = sensitivity(chain)
         if sens:
             print()
@@ -214,7 +294,10 @@ def run(args: argparse.Namespace) -> int:
                         [[l, fmt(lo), fmt(hi), fmt(sw)] for l, lo, hi, sw in sens]))
         if args.simulate:
             p10, p50, p90 = simulate(chain, args.simulate, args.seed)
-            print(f"Simulated range ({args.simulate:,} runs): P10 {fmt(p10)}, P50 {fmt(p50)}, P90 {fmt(p90)}")
+            print(f"Simulated {'TAM' if serviceable else 'range'} ({args.simulate:,} runs): P10 {fmt(p10)}, P50 {fmt(p50)}, P90 {fmt(p90)}")
+            for i, (code, _, _) in enumerate(levels):
+                q10, q50, q90 = simulate(chain, args.simulate, args.seed, tuple(st for _, st in serviceable[:i + 1]))
+                print(f"Simulated {code.upper()}: P10 {fmt(q10)}, P50 {fmt(q50)}, P90 {fmt(q90)}")
 
     ratio, ok = reconcile(estimates, args.tolerance)
     print()

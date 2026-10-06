@@ -81,3 +81,71 @@ def test_zero_disagreement_without_ranges_prints_a_clean_sentence(tmp_path, caps
     assert main(["market-size", str(path)]) == 0
     last = capsys.readouterr().out.strip().splitlines()[-1]
     assert last == "The approaches disagree completely, one of them is zero. Do not present either number yet."
+
+
+def _lunch():
+    with open("examples/market_size_lunch_segments.json", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def test_segments_add_to_a_hand_worked_total():
+    # Large: 60 * 500 * 0.20 * 120 * 180 = 129,600,000
+    # Small: 400 * 40 * 0.15 * 100 * 150 = 36,000,000
+    chains = parse_model(_lunch())
+    assert estimate(chains["top_down"]) == pytest.approx(165_600_000)
+    assert estimate(chains["bottom_up"]) == pytest.approx(165_000_000)
+
+
+def test_segment_sensitivity_is_judged_on_the_sum():
+    # Large offices' weekly share at 0.12: 60 * 500 * 0.12 * 120 * 180 = 77,760,000, plus small 36,000,000
+    rows = sensitivity(parse_model(_lunch())["top_down"])
+    row = next(r for r in rows if r[0] == "Large offices: Order office lunch weekly")
+    assert row[1] == pytest.approx(113_760_000)
+    assert rows[0][0] == row[0]
+
+
+def test_simulation_of_segments_is_reproducible_and_brackets_the_estimate():
+    chain = parse_model(_lunch())["top_down"]
+    first = simulate(chain, 3000, seed=3)
+    assert first == simulate(chain, 3000, seed=3)
+    assert first[0] < 165_600_000 < first[2]
+
+
+def test_serviceable_shares_are_parsed_in_order():
+    from decisionlab.consulting.market_sizing import parse_serviceable
+    sam, som = parse_serviceable(_lunch())
+    assert (sam[0], sam[1].value) == ("sam", 0.40)
+    assert (som[0], som[1].value) == ("som", 0.10)
+
+
+@pytest.mark.parametrize("bad", [
+    {"som": {"label": "x", "value": 0.1}},
+    {"sam": {"label": "x", "value": 1.4}},
+    {"tam": {"label": "x", "value": 0.5}},
+    {},
+    "half",
+])
+def test_bad_serviceable_is_refused(bad):
+    from decisionlab.consulting.market_sizing import parse_serviceable
+    with pytest.raises(ValueError):
+        parse_serviceable({"serviceable": bad})
+
+
+@pytest.mark.parametrize("approach", [
+    {"segments": {}},
+    {"segments": {"a": []}},
+    {"segments": {"a": [{"label": "x", "value": -2}]}},
+    {"nothing": 1},
+])
+def test_bad_segments_are_refused(approach):
+    with pytest.raises(ValueError):
+        parse_model({"approaches": {"a": approach}})
+
+
+def test_cli_labels_tam_sam_som(capsys):
+    from decisionlab.cli import main
+    assert main(["market-size", "examples/market_size_lunch_segments.json"]) == 0
+    out = capsys.readouterr().out
+    assert "TAM (segments added): 16.6 crore" in out
+    assert "SAM (Offices we can deliver to on day one, 40%): 6.62 crore" in out
+    assert "SOM (Share of that we win in three years, 10%): 66.2 lakh" in out

@@ -9,6 +9,9 @@ What changed, and the problem it fixes. One or two lines.
 
 The point of this file is to make improvement visible. A repo of forty one-off scripts is worth less than six tools that got better, but only if the getting better is legible from the outside.
 
+## 2026-10-06  market-size
+An approach can now be several segments whose totals add, and the model can name `sam` and `som` shares so TAM, SAM and SOM are labelled in the output, with a simulated range for each. Only a one-chain model used to be possible, so a market made of segments had to be run as separate models and added by hand. Sensitivity is judged on the sum. Plain-list models behave as before, except the final line now reads `TAM` instead of `Estimate` when `serviceable` is set. New example `examples/market_size_lunch_segments.json`, illustrative.
+
 ## 2026-10-05  funnel
 First version. Step conversion against the previous step with Wilson intervals, from a step-count CSV or an event log. Names the step with the lowest rate and says whether its interval overlaps the next lowest. Blank step counts are skipped and reported, rising counts are refused, and users who skip a step in an event log are counted and flagged. Standard library only.
 

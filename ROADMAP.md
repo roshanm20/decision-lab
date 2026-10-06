@@ -61,7 +61,7 @@ The order inside a section is the priority. Extending a tool that people already
 - [x] CO-01 | new | unit-economics: CAC, contribution margin, payback and LTV with sensitivity | M
   - why: every consulting case and every founder deck needs this, and most versions hide the assumption doing the work.
   - done when: JSON inputs, prints the unit economics and a sensitivity table ranked by swing, like market-size, tests and docs.
-- [ ] CO-02 | extend | market-size: add segments that sum, and label SAM and SOM | M
+- [x] CO-02 | extend | market-size: add segments that sum, and label SAM and SOM | M
   - why: real markets are several segments added together, and the tool only multiplies.
   - done when: a model can hold segments whose totals add, TAM, SAM and SOM are labelled in the output, the example still reconciles, tests.
 - [ ] CO-03 | new | case-math: mental maths drills for case interviews | S
