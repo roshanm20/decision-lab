@@ -114,6 +114,66 @@ def analyze(n_a: int, x_a: int, n_b: int, x_b: int, alpha: float = 0.05,
     )
 
 
+def holm_adjust(p_values: list) -> list:
+    """Holm step-down adjusted p-values, returned in the input order.
+
+    Sort ascending. The i-th smallest (counting from 1) of m is multiplied
+    by m - i + 1, then the running maximum is taken so the adjusted values
+    never fall as p rises, and everything is capped at 1. A hypothesis
+    survives at level alpha when its adjusted p is under alpha.
+    """
+    m = len(p_values)
+    if m == 0:
+        raise ValueError("need at least one p-value")
+    if any(not 0 <= p <= 1 for p in p_values):
+        raise ValueError("p-values must be between 0 and 1")
+    order = sorted(range(m), key=lambda i: p_values[i])
+    adjusted = [0.0] * m
+    running = 0.0
+    for rank, i in enumerate(order):
+        running = max(running, min(1.0, (m - rank) * p_values[i]))
+        adjusted[i] = running
+    return adjusted
+
+
+@dataclass
+class MultiResult:
+    analyses: list
+    adjusted_p: list
+    survives: list
+
+
+def analyze_many(n_a: int, x_a: int, variants: list, alpha: float = 0.05,
+                 power: float = 0.8) -> MultiResult:
+    """Compare several variants, each with control, and apply Holm to the p-values.
+
+    `variants` is a list of (visitors, conversions) pairs.
+    """
+    if not variants:
+        raise ValueError("give at least one variant")
+    analyses = [analyze(n_a, x_a, n_b, x_b, alpha, power) for n_b, x_b in variants]
+    adjusted = holm_adjust([a.p_value for a in analyses])
+    return MultiResult(analyses, adjusted, [p < alpha for p in adjusted])
+
+
+def multi_verdict(res: MultiResult) -> str:
+    m = len(res.analyses)
+    won = [i for i, ok in enumerate(res.survives) if ok]
+    raw = [i for i, a in enumerate(res.analyses) if a.significant]
+    lost = [i for i in raw if i not in won]
+    if not won:
+        text = f"No variant beats control once the correction for {m} comparisons is applied."
+    else:
+        names = ", ".join(f"variant {i + 1}" for i in won)
+        text = f"{names} still differ from control after the correction for {m} comparisons."
+    if lost:
+        names = ", ".join(f"variant {i + 1}" for i in lost)
+        text += (f" {names} looked significant on its own but does not survive the correction, "
+                 f"so treat it as likely noise.")
+    text += " A flat variant here is not proof of no effect. Check the sample size with `size`."
+    return text
+
+
 def _p(p: float) -> str:
     return "p < 0.001" if p < 0.001 else f"p = {p:.3f}"
 
@@ -161,7 +221,8 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     s.add_argument("--daily-visitors", type=int, help="total daily traffic into the test, to estimate days")
     a = sub.add_parser("analyze", help="is the observed difference real")
     a.add_argument("--control", nargs=2, type=int, metavar=("VISITORS", "CONVERSIONS"), required=True)
-    a.add_argument("--variant", nargs=2, type=int, metavar=("VISITORS", "CONVERSIONS"), required=True)
+    a.add_argument("--variant", nargs=2, type=int, metavar=("VISITORS", "CONVERSIONS"), required=True,
+                   action="append", help="repeat for several variants, Holm correction is then applied")
     a.add_argument("--alpha", type=float, default=0.05)
     a.add_argument("--power", type=float, default=0.8)
     a.add_argument("--mde", type=float,
@@ -186,7 +247,9 @@ def run(args: argparse.Namespace) -> int:
         return 0
 
     n_a, x_a = args.control
-    n_b, x_b = args.variant
+    if len(args.variant) > 1:
+        return _run_many(args)
+    n_b, x_b = args.variant[0]
     res = analyze(n_a, x_a, n_b, x_b, args.alpha, args.power)
     print(f"Control : {x_a:,} / {n_a:,} = {pct(res.rate_a, 2)}")
     print(f"Variant : {x_b:,} / {n_b:,} = {pct(res.rate_b, 2)}")
@@ -199,4 +262,23 @@ def run(args: argparse.Namespace) -> int:
         print("Warning: fewer than 10 conversions in an arm. The approximation behind these numbers is shaky here.")
     print()
     print(verdict(res, args.mde))
+    return 0
+
+
+def _run_many(args: argparse.Namespace) -> int:
+    n_a, x_a = args.control
+    res = analyze_many(n_a, x_a, args.variant, args.alpha, args.power)
+    m = len(args.variant)
+    print(f"Control : {x_a:,} / {n_a:,} = {pct(x_a / n_a, 2)}")
+    print(f"{m} variants, each against control. Holm correction at alpha {args.alpha}.")
+    print(f"{'':10}{'rate':>8}{'diff (pts)':>12}{'raw p':>9}{'Holm p':>9}  result")
+    for i, (a, adj, ok) in enumerate(zip(res.analyses, res.adjusted_p, res.survives), 1):
+        result = ("survives, better" if a.diff > 0 else "survives, worse") if ok else "not significant"
+        print(f"variant {i:<2}{pct(a.rate_b, 2):>8}{a.diff * 100:>+12.2f}{a.p_value:>9.4f}{adj:>9.4f}  {result}")
+    if any(a.few_conversions for a in res.analyses) or x_a < 10:
+        print("Warning: fewer than 10 conversions in an arm. The approximation behind these numbers is shaky here.")
+    if args.mde is not None:
+        print("Note: --mde is not used with several variants.")
+    print()
+    print(multi_verdict(res))
     return 0

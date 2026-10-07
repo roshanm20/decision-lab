@@ -21,7 +21,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 <!-- INDEX:START -->
 
-**8 tools across 4 groups, 195 tests, 5 written notes.**
+**8 tools across 4 groups, 204 tests, 5 written notes.**
 
 **For consultants**
 

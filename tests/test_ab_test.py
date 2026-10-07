@@ -103,3 +103,62 @@ def test_bad_daily_visitors_prints_nothing_before_the_error(capsys):
     from decisionlab.cli import main
     assert main(["ab-test", "size", "--baseline", "0.1", "--mde", "0.02", "--daily-visitors", "0"]) == 2
     assert capsys.readouterr().out == ""
+
+
+def test_holm_worked_by_hand():
+    # Worked by hand: p = 0.01, 0.04, 0.03, 0.005 with m = 4.
+    # Sorted: 0.005*4 = 0.02, 0.01*3 = 0.03, 0.03*2 = 0.06, 0.04*1 = 0.04 -> max so far 0.06.
+    from decisionlab.marketing.ab_test import holm_adjust
+    got = holm_adjust([0.01, 0.04, 0.03, 0.005])
+    assert got == pytest.approx([0.03, 0.06, 0.06, 0.02])
+
+
+def test_holm_caps_at_one_and_keeps_order():
+    from decisionlab.marketing.ab_test import holm_adjust
+    assert holm_adjust([0.6, 0.9]) == pytest.approx([1.0, 1.0])
+    assert holm_adjust([0.02]) == pytest.approx([0.02])
+
+
+@pytest.mark.parametrize("bad", [[], [0.1, 1.5], [-0.1]])
+def test_holm_bad_input(bad):
+    from decisionlab.marketing.ab_test import holm_adjust
+    with pytest.raises(ValueError):
+        holm_adjust(bad)
+
+
+def test_analyze_many_correction_removes_a_false_winner():
+    from decisionlab.marketing.ab_test import analyze_many, multi_verdict
+    # Variant 1 has raw p of about 0.0155. By hand, with 4 variants the smallest
+    # p is multiplied by 4, giving about 0.062, which is over 0.05.
+    res = analyze_many(5000, 500, [(5000, 575), (5000, 540), (5000, 515), (5000, 495)])
+    assert res.analyses[0].significant
+    assert res.adjusted_p[0] == pytest.approx(4 * res.analyses[0].p_value)
+    assert not any(res.survives)
+    assert "does not survive the correction" in multi_verdict(res)
+
+
+def test_analyze_many_real_winner_survives():
+    from decisionlab.marketing.ab_test import analyze_many
+    res = analyze_many(5000, 500, [(5000, 650), (5000, 575), (5000, 515)])
+    assert res.survives == [True, True, False]
+
+
+def test_analyze_many_bad_input():
+    from decisionlab.marketing.ab_test import analyze_many
+    with pytest.raises(ValueError):
+        analyze_many(5000, 500, [])
+    with pytest.raises(ValueError):
+        analyze_many(5000, 500, [(5000, 6000), (5000, 10)])
+
+
+def test_cli_several_variants(capsys):
+    import argparse
+    from decisionlab.marketing import ab_test
+    parser = argparse.ArgumentParser()
+    ab_test.add_arguments(parser)
+    args = parser.parse_args(["analyze", "--control", "5000", "500", "--variant", "5000", "575",
+                              "--variant", "5000", "540", "--mde", "0.01"])
+    assert ab_test.run(args) == 0
+    out = capsys.readouterr().out
+    assert "2 variants, each against control" in out
+    assert "--mde is not used" in out

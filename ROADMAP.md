@@ -100,7 +100,7 @@ The order inside a section is the priority. Extending a tool that people already
 - [x] MK-11 | extend | srm: check for mismatch day by day, not only at the end | M
   - why: Optimizely's automatic SRM detection checks for imbalance daily through a running test, catching a broken split before the test ends rather than after. Today's srm tool only checks one set of final counts. Found in Optimizely's support docs, updated 2026-03-06, checked 2026-09-23.
   - done when: srm accepts a CSV of daily per-arm counts, runs the chi-square check at each day, names the first day the imbalance becomes significant, and tests confirm it raises no false alarm on a clean daily-count series.
-- [ ] MK-02 | extend | ab-test: several variants with a Holm correction | S
+- [x] MK-02 | extend | ab-test: several variants with a Holm correction | S
   - why: testing four variants at p under 0.05 each gives a false winner far too often.
   - done when: `analyze` accepts several variants, applies Holm, and says which survive, tests.
 - [ ] MK-03 | new | attribution: first touch, last touch, linear and time decay compared | M
