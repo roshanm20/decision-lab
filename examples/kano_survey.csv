@@ -1,0 +1,415 @@
+# Illustrative: invented survey answers for a made-up product, not real customer data.
+feature,functional,dysfunctional
+Dark mode,neutral,neutral
+Dark mode,like,neutral
+Dark mode,like,live-with
+Dark mode,like,live-with
+Dark mode,neutral,live-with
+Dark mode,neutral,neutral
+Dark mode,like,neutral
+Dark mode,like,live-with
+Dark mode,like,neutral
+Dark mode,like,dislike
+Dark mode,like,neutral
+Dark mode,neutral,neutral
+Dark mode,like,live-with
+Dark mode,neutral,neutral
+Dark mode,neutral,live-with
+Dark mode,like,live-with
+Dark mode,like,neutral
+Dark mode,must-be,dislike
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,like,live-with
+Dark mode,like,dislike
+Dark mode,like,neutral
+Dark mode,like,live-with
+Dark mode,like,dislike
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,like,dislike
+Dark mode,like,neutral
+Dark mode,must-be,dislike
+Dark mode,neutral,live-with
+Dark mode,neutral,neutral
+Dark mode,like,dislike
+Dark mode,neutral,live-with
+Dark mode,neutral,live-with
+Dark mode,neutral,neutral
+Dark mode,like,live-with
+Dark mode,neutral,live-with
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,must-be,dislike
+Dark mode,neutral,neutral
+Dark mode,like,neutral
+Dark mode,neutral,neutral
+Dark mode,like,dislike
+Dark mode,like,neutral
+Dark mode,neutral,neutral
+Dark mode,neutral,neutral
+Dark mode,neutral,neutral
+Dark mode,like,live-with
+Dark mode,neutral,neutral
+Dark mode,like,live-with
+Dark mode,like,neutral
+Dark mode,must-be,dislike
+Dark mode,like,live-with
+Dark mode,like,dislike
+Dark mode,like,neutral
+Dark mode,neutral,neutral
+Dark mode,like,live-with
+Dark mode,like,neutral
+Dark mode,like,live-with
+Dark mode,like,neutral
+Dark mode,like,dislike
+Dark mode,neutral,neutral
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,neutral,neutral
+Dark mode,like,neutral
+Dark mode,like,dislike
+Dark mode,like,neutral
+Dark mode,neutral,neutral
+Dark mode,like,neutral
+Dark mode,like,neutral
+Dark mode,like,dislike
+Dark mode,like,neutral
+Dark mode,like,live-with
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,dislike
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,neutral,neutral
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,neutral,neutral
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,neutral,neutral
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,live-with
+Two-factor login,neutral,neutral
+Two-factor login,neutral,neutral
+Two-factor login,like,live-with
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,like
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,live-with
+Two-factor login,must-be,dislike
+Two-factor login,neutral,neutral
+Two-factor login,neutral,neutral
+Two-factor login,neutral,neutral
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,like
+Two-factor login,must-be,dislike
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,live-with
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,neutral,dislike
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,live-with
+Two-factor login,like,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,dislike
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Two-factor login,neutral,neutral
+Two-factor login,must-be,dislike
+Two-factor login,like,live-with
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,neutral,neutral
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,must-be,dislike
+Two-factor login,like,dislike
+Two-factor login,neutral,dislike
+Two-factor login,must-be,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,neutral,neutral
+Bulk export,like,live-with
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,dislike,like
+Bulk export,must-be,dislike
+Bulk export,like,live-with
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,neutral,neutral
+Bulk export,like,dislike
+Bulk export,neutral,live-with
+Bulk export,like,dislike
+Bulk export,neutral,dislike
+Bulk export,like,dislike
+Bulk export,must-be,dislike
+Bulk export,like,dislike
+Bulk export,must-be,dislike
+Bulk export,like,dislike
+Bulk export,like,live-with
+Bulk export,neutral,neutral
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,dislike,like
+Bulk export,neutral,neutral
+Bulk export,like,live-with
+Bulk export,neutral,dislike
+Bulk export,neutral,dislike
+Bulk export,like,dislike
+Bulk export,neutral,live-with
+Bulk export,like,live-with
+Bulk export,like,dislike
+Bulk export,like,live-with
+Bulk export,neutral,dislike
+Bulk export,neutral,dislike
+Bulk export,must-be,dislike
+Bulk export,neutral,neutral
+Bulk export,like,dislike
+Bulk export,like,live-with
+Bulk export,like,dislike
+Bulk export,like,live-with
+Bulk export,neutral,neutral
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,neutral,dislike
+Bulk export,neutral,live-with
+Bulk export,like,dislike
+Bulk export,neutral,neutral
+Bulk export,like,dislike
+Bulk export,like,live-with
+Bulk export,neutral,neutral
+Bulk export,must-be,dislike
+Bulk export,like,dislike
+Bulk export,neutral,dislike
+Bulk export,neutral,dislike
+Bulk export,like,dislike
+Bulk export,like,live-with
+Bulk export,neutral,dislike
+Bulk export,neutral,neutral
+Bulk export,like,dislike
+Bulk export,neutral,dislike
+Bulk export,neutral,neutral
+Bulk export,like,live-with
+Bulk export,like,dislike
+Bulk export,must-be,dislike
+Bulk export,like,live-with
+Bulk export,neutral,neutral
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,live-with
+Bulk export,like,dislike
+Bulk export,neutral,dislike
+Bulk export,like,dislike
+Bulk export,must-be,dislike
+Bulk export,like,dislike
+Bulk export,neutral,live-with
+Bulk export,like,dislike
+Bulk export,must-be,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,live-with
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,like,dislike
+Bulk export,neutral,live-with
+Bulk export,neutral,neutral
+Bulk export,neutral,dislike
+Bulk export,like,dislike
+Bulk export,neutral,live-with
+Bulk export,like,live-with
+Bulk export,like,live-with
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,neutral
+Weekly digest email,like,dislike
+Weekly digest email,dislike,neutral
+Weekly digest email,neutral,dislike
+Weekly digest email,like,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,like,dislike
+Weekly digest email,like,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,dislike
+Weekly digest email,like,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,like,dislike
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,live-with
+Weekly digest email,like,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,dislike,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,dislike,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,like,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,like,dislike
+Weekly digest email,like,neutral
+Weekly digest email,dislike,neutral
+Weekly digest email,neutral,dislike
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,like,neutral
+Weekly digest email,like,dislike
+Weekly digest email,like,dislike
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,dislike,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,dislike
+Weekly digest email,neutral,live-with
+Weekly digest email,like,dislike
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,like,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,like,dislike
+Weekly digest email,neutral,dislike
+Weekly digest email,dislike,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,dislike,neutral
+Weekly digest email,dislike,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,dislike
+Weekly digest email,neutral,live-with
+Weekly digest email,like,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,like,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,dislike
+Weekly digest email,like,dislike
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,dislike
+Weekly digest email,like,dislike
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,dislike
+Weekly digest email,neutral,dislike
+Weekly digest email,like,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,live-with
+Weekly digest email,neutral,neutral
+Weekly digest email,like,neutral
+Weekly digest email,neutral,neutral
+Weekly digest email,neutral,neutral
+Offline sync,like,dislike
+Offline sync,like,dislike
+Offline sync,like,neutral
+Offline sync,like,dislike
+Offline sync,like,neutral
+Offline sync,like,dislike
+Offline sync,like,neutral
+Offline sync,like,dislike
+Offline sync,like,dislike
+Offline sync,like,neutral
+Offline sync,like,dislike
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,neutral,neutral
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,like,dislike
+Offline sync,like,dislike
+Offline sync,like,dislike
+Offline sync,like,dislike
+Offline sync,like,neutral
+Offline sync,like,dislike
+Offline sync,neutral,neutral
+Offline sync,like,dislike
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,neutral,neutral
+Offline sync,neutral,neutral
+Offline sync,like,dislike
+Offline sync,like,neutral
+Offline sync,like,dislike
+Offline sync,like,dislike
+Offline sync,neutral,neutral
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,like,neutral
+Offline sync,neutral,neutral
+Offline sync,like,neutral
+Offline sync,like,dislike
+Offline sync,like,dislike
+Offline sync,neutral,neutral
+Offline sync,like,dislike
+Offline sync,neutral,neutral
+Offline sync,like,dislike

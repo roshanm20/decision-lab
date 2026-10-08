@@ -139,7 +139,7 @@ The order inside a section is the priority. Extending a tool that people already
 - [x] PM-02 | new | nps: NPS with a confidence interval and segment comparison | S
   - why: NPS moves of a few points get celebrated when the interval is plus or minus ten.
   - done when: scores CSV in, NPS, its interval and a comparison between two segments out, tests.
-- [ ] PM-03 | new | kano: Kano model classifier for feature surveys | M
+- [x] PM-03 | new | kano: Kano model classifier for feature surveys | M
   - why: teams build features customers expect as if they were delighters.
   - done when: paired functional and dysfunctional answers in, Kano category per feature with counts out, tests on a worked example.
 - [ ] PM-04 | new | metric-tree: a north star metric tree from YAML | M

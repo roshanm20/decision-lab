@@ -1,6 +1,6 @@
 # Index
 
-8 tools, 204 tests, 5 notes.
+9 tools, 220 tests, 5 notes.
 
 ## Tools
 
@@ -23,6 +23,7 @@
 
 - [`rice`](../docs/tools/rice.md) Ranks a backlog by RICE and flags which positions depend on a confidence guess being right.
 - [`nps`](../docs/tools/nps.md) Scores NPS from raw 0 to 10 replies, puts an interval on it and tests whether two segments really differ.
+- [`kano`](../docs/tools/kano.md) Turns paired present and absent survey answers into a Kano category per feature, with counts, ties flagged and Better and Worse scores.
 
 ## Notes
 

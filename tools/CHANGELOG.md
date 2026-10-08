@@ -9,6 +9,9 @@ What changed, and the problem it fixes. One or two lines.
 
 The point of this file is to make improvement visible. A repo of forty one-off scripts is worth less than six tools that got better, but only if the getting better is legible from the outside.
 
+## 2026-10-08  kano
+First version. Kano category per feature from paired present and absent survey answers, using the standard 5 by 5 evaluation table, with counts for all six codes and Better and Worse scores. Ties are reported and never broken silently. Notes flag close calls, features with under 30 replies and many contradictory answers. Standard library only. New example `examples/kano_survey.csv`, illustrative.
+
 ## 2026-10-07  ab-test
 `analyze` takes `--variant` more than once and applies a Holm correction across the comparisons with control. The table shows raw and adjusted p and which variants survive, and the verdict names any that looked significant alone but fail after correction. Four variants at 0.05 each give about a 19 percent chance of a false winner, which the old single-variant output could not guard against. A single `--variant` behaves as before.
 

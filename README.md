@@ -21,7 +21,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 <!-- INDEX:START -->
 
-**8 tools across 4 groups, 204 tests, 5 written notes.**
+**9 tools across 4 groups, 220 tests, 5 written notes.**
 
 **For consultants**
 
@@ -42,6 +42,7 @@ Or without installing, from a clone: `python -m decisionlab list`.
 
 - [`rice`](docs/tools/rice.md) Ranks a backlog by RICE and flags which positions depend on a confidence guess being right.
 - [`nps`](docs/tools/nps.md) Scores NPS from raw 0 to 10 replies, puts an interval on it and tests whether two segments really differ.
+- [`kano`](docs/tools/kano.md) Turns paired present and absent survey answers into a Kano category per feature, with counts, ties flagged and Better and Worse scores.
 
 **Latest notes**
 
